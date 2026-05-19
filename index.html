@@ -22,13 +22,14 @@
 body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;line-height:1.6;min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.7)100%);pointer-events:none;z-index:0}
-.app-wrapper{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr;min-height:100vh;max-width:1400px;margin:0 auto;padding:0 16px}
+.app-wrapper{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr;min-height:100vh;max-width:1440px;margin:0 auto;padding:0 16px}
+
 /* HEADER */
 header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 14px;border-bottom:1px solid var(--border);gap:16px}
 .logo{display:flex;align-items:center;gap:12px}
-.logo-icon{width:38px;height:38px;border:1.5px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:var(--glow-sm);flex-shrink:0}
-.logo-icon::after{content:'';position:absolute;width:50%;height:50%;background:var(--accent);border-radius:50%;opacity:.8;animation:sonar-pulse 2.4s ease-in-out infinite}
-@keyframes sonar-pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.3);opacity:.3}}
+.logo-icon{width:38px;height:38px;border:1.5px solid var(--accent);border-radius:50%;position:relative;box-shadow:var(--glow-sm);flex-shrink:0}
+.logo-icon::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40%;height:40%;background:var(--accent);border-radius:50%;opacity:.8;animation:sonar-pulse 2.4s ease-in-out infinite}
+@keyframes sonar-pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.8}50%{transform:translate(-50%,-50%) scale(1.4);opacity:.3}}
 .logo-text{font-family:var(--font-ui);font-weight:700;font-size:22px;letter-spacing:4px;color:var(--accent);text-shadow:var(--glow-sm)}
 .logo-sub{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-top:-2px}
 .header-right{display:flex;align-items:center;gap:20px}
@@ -40,17 +41,23 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 .model-selector{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dim);letter-spacing:1px}
 select{background:var(--bg-card);border:1px solid var(--border);color:var(--accent);font-family:var(--font-mono);font-size:12px;padding:4px 28px 4px 10px;border-radius:var(--radius);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300d4ff'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .2s}
 select:hover,select:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
+
 /* MAIN */
 main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 0 24px;align-items:start}
-@media(max-width:900px){main{grid-template-columns:1fr}}
+@media(max-width:960px){main{grid-template-columns:1fr}}
+
 /* PANELS */
-.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .3s}
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);overflow:visible;transition:border-color .3s}
 .panel:hover{border-color:var(--border-glow)}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-card);border-bottom:1px solid var(--border)}
 .panel-title{font-family:var(--font-ui);font-weight:600;font-size:13px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
 .panel-badge{font-size:10px;letter-spacing:1px;color:var(--text-muted);border:1px solid var(--text-muted);padding:1px 7px;border-radius:2px}
 .panel-body{padding:16px}
-/* INPUT */
+#result-panel{display:flex;flex-direction:column}
+#result-body{flex:1;padding:16px;overflow-y:auto;max-height:72vh}
+.edit-mode-bar,#export-bar{flex-shrink:0;position:relative;z-index:10}
+
+/* INPUT SIDE */
 .input-label{font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
 textarea{width:100%;min-height:250px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);font-size:12.5px;line-height:1.7;padding:12px 14px;resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s;caret-color:var(--accent)}
 textarea::placeholder{color:var(--text-muted)}
@@ -59,7 +66,7 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .quick-examples{margin-top:14px}
 .quick-label{font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
 .examples-grid{display:flex;flex-wrap:wrap;gap:6px}
-.example-chip{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;padding:4px 10px;border-radius:2px;cursor:pointer;letter-spacing:.5px;transition:all .2s}
+.example-chip{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;padding:4px 10px;border-radius:2px;cursor:pointer;transition:all .2s}
 .example-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.05)}
 .btn-analyse{width:100%;margin-top:14px;padding:13px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);font-family:var(--font-ui);font-weight:700;font-size:15px;letter-spacing:3px;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;position:relative;overflow:hidden;transition:all .25s}
 .btn-analyse::before{content:'';position:absolute;inset:0;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .3s ease;z-index:0;opacity:.08}
@@ -71,6 +78,7 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .progress-bar-wrap.active{opacity:1}
 .progress-bar{height:100%;width:40%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;animation:progress-slide 1.4s ease-in-out infinite;box-shadow:0 0 8px var(--accent)}
 @keyframes progress-slide{0%{transform:translateX(-150%)}100%{transform:translateX(350%)}}
+
 /* PLACEHOLDER */
 .results-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:380px;color:var(--text-muted);text-align:center;gap:12px}
 .radar-anim{width:80px;height:80px;border:1.5px solid var(--text-muted);border-radius:50%;position:relative;animation:radar-rotate 3s linear infinite}
@@ -78,39 +86,154 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .radar-anim::after{content:'';position:absolute;inset:8px;border:1px solid var(--text-muted);border-radius:50%;opacity:.4}
 @keyframes radar-rotate{to{transform:rotate(360deg)}}
 .placeholder-text{font-size:11px;letter-spacing:2px;text-transform:uppercase}
-/* RESULTS */
-.result-section{margin-bottom:16px}
+
+/* =====================================================================
+   RÉSULTATS ÉDITABLES
+===================================================================== */
+.result-section{margin-bottom:18px}
 .section-title{font-family:var(--font-ui);font-weight:600;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .section-title::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0}
+
+/* Champ éditable inline */
+[contenteditable]{
+  outline:none;
+  border-radius:2px;
+  transition:background .15s, box-shadow .15s;
+  cursor:text;
+  position:relative;
+}
+[contenteditable]:hover{background:rgba(0,212,255,.04)}
+[contenteditable]:focus{
+  background:rgba(0,212,255,.07);
+  box-shadow:inset 0 0 0 1px var(--accent);
+}
+/* Indicateur "éditable" au survol */
+[contenteditable]::after{
+  content:'✎';
+  font-size:9px;
+  color:var(--text-muted);
+  margin-left:6px;
+  opacity:0;
+  transition:opacity .2s;
+  pointer-events:none;
+}
+[contenteditable]:hover::after{opacity:1}
+
+/* Périmètre */
 .perimetre-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sub-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
 .sub-card-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
-.tag-list{display:flex;flex-wrap:wrap;gap:5px}
-.tag{background:rgba(0,212,255,.07);border:1px solid var(--border);color:var(--accent);font-size:11px;padding:2px 8px;border-radius:2px;letter-spacing:.5px}
+.tag-list{display:flex;flex-wrap:wrap;gap:5px;min-height:22px}
+
+/* Tags éditables */
+.tag{
+  background:rgba(0,212,255,.07);border:1px solid var(--border);color:var(--accent);
+  font-size:11px;padding:2px 6px 2px 8px;border-radius:2px;letter-spacing:.5px;
+  display:inline-flex;align-items:center;gap:4px;
+}
 .tag.green{color:var(--accent2);background:rgba(0,255,157,.06);border-color:rgba(0,255,157,.2)}
 .tag.orange{color:var(--accent3);background:rgba(255,107,53,.07);border-color:rgba(255,107,53,.25)}
-.besoin-text{background:rgba(0,212,255,.04);border-left:3px solid var(--accent);padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;border-radius:0 var(--radius) var(--radius) 0}
+.tag span[contenteditable]{min-width:30px;display:inline-block}
+.tag .del-tag{
+  cursor:pointer;font-size:10px;color:var(--text-muted);
+  line-height:1;padding:0 2px;border-radius:1px;
+  transition:color .15s;
+}
+.tag .del-tag:hover{color:var(--error)}
+.btn-add-tag{
+  background:transparent;border:1px dashed var(--text-muted);color:var(--text-muted);
+  font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:2px;
+  cursor:pointer;transition:all .2s;letter-spacing:.5px;
+}
+.btn-add-tag:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Besoin fondamental */
+.besoin-text{
+  background:rgba(0,212,255,.04);border-left:3px solid var(--accent);
+  padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;
+  border-radius:0 var(--radius) var(--radius) 0;
+  min-height:40px;
+}
+
+/* Exigences fonctionnelles */
 .exigences-list{display:flex;flex-direction:column;gap:6px}
-.exigence-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-size:12px;line-height:1.5;display:flex;gap:10px;align-items:flex-start;transition:border-color .2s}
+.exigence-item{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:7px 10px 7px 12px;font-size:12px;line-height:1.5;
+  display:flex;gap:8px;align-items:flex-start;transition:border-color .2s;
+}
 .exigence-item:hover{border-color:var(--accent2)}
+.exigence-item.drag-over{border-color:var(--accent);background:rgba(0,212,255,.06)}
+.exigence-item.dragging{opacity:.4}
+.drag-handle{
+  cursor:grab;color:var(--text-muted);font-size:12px;flex-shrink:0;
+  margin-top:1px;padding:0 2px;user-select:none;
+  transition:color .15s;
+}
+.drag-handle:hover{color:var(--accent)}
+.drag-handle:active{cursor:grabbing}
 .exigence-num{color:var(--accent2);font-size:10px;font-weight:bold;letter-spacing:1px;flex-shrink:0;margin-top:1px}
+.exigence-text{flex:1;min-width:0}
 .exigence-must{color:var(--accent3);font-weight:bold}
+.del-row{
+  cursor:pointer;color:var(--text-muted);font-size:14px;flex-shrink:0;
+  padding:0 3px;line-height:1.4;border-radius:2px;transition:color .15s, background .15s;
+  margin-top:0;
+}
+.del-row:hover{color:var(--error);background:rgba(255,61,90,.1)}
+
+/* Bouton ajouter une ligne */
+.btn-add-row{
+  width:100%;margin-top:6px;padding:6px;
+  background:transparent;border:1px dashed var(--text-muted);
+  color:var(--text-muted);font-family:var(--font-mono);font-size:11px;
+  letter-spacing:1px;border-radius:var(--radius);cursor:pointer;
+  transition:all .2s;
+}
+.btn-add-row:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(0,255,157,.04)}
+
+/* Contraintes */
 .contraintes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .contrainte-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:9px 11px;font-size:11px}
 .contrainte-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px}
-.contrainte-val{color:var(--text);line-height:1.4}
+.contrainte-val{color:var(--text);line-height:1.4;min-height:16px}
 .contrainte-val.na{color:var(--text-muted);font-style:italic}
-.keywords-wrap{display:flex;flex-wrap:wrap;gap:6px}
-/* EXPORT */
-.export-bar{display:flex;gap:10px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border)}
-.btn-export{flex:1;padding:9px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:all .2s}
+
+/* Mots-clés */
+.keywords-wrap{display:flex;flex-wrap:wrap;gap:6px;min-height:22px}
+
+/* EDIT MODE INDICATOR */
+.edit-mode-bar{
+  display:flex;align-items:center;gap:8px;padding:7px 16px;
+  background:rgba(0,212,255,.05);border-top:1px solid var(--border);
+  font-size:10px;color:var(--text-dim);letter-spacing:1px;
+}
+.edit-indicator{width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 6px var(--accent2);animation:blink 1.5s ease-in-out infinite;flex-shrink:0}
+
+/* EXPORT BAR */
+.export-bar{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);}
+.btn-export{padding:8px 6px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:all .2s;text-align:center;width:100%}
 .btn-export:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(0,255,157,.05)}
+.btn-word{border-color:#2b6cb0;color:#63b3ed}
+.btn-word:hover{border-color:#63b3ed;color:#63b3ed;background:rgba(99,179,237,.12)}
+.btn-excel{border-color:#276748;color:#68d391}
+.btn-excel:hover{border-color:#68d391;color:#68d391;background:rgba(104,211,145,.12)}
+
 /* TOAST */
 #toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--accent);color:var(--text);font-size:12px;padding:12px 18px;border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,.6);z-index:1000;transform:translateY(20px);opacity:0;transition:all .3s;max-width:320px;letter-spacing:.5px}
 #toast.show{transform:translateY(0);opacity:1}
 #toast.success{border-left-color:var(--success)}
 #toast.err-toast{border-left-color:var(--error)}
 .error-box{background:rgba(255,61,90,.07);border:1px solid rgba(255,61,90,.3);border-radius:var(--radius);padding:14px;color:var(--error);font-size:12px;line-height:1.6}
+
+/* Système sous analyse éditable */
+.systeme-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,212,255,.07);border:1px solid var(--border);
+  color:var(--accent);font-size:13px;padding:4px 12px;border-radius:2px;
+  margin-bottom:10px;
+}
+
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -147,7 +270,7 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 <!-- MAIN -->
 <main>
 
-  <!-- PANNEAU ENTRÉE -->
+  <!-- PANNEAU GAUCHE : INPUT -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">Demande Client</span>
@@ -156,7 +279,7 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
     <div class="panel-body">
       <div class="input-label">Saisir ou coller la demande à analyser :</div>
       <textarea id="demande-input" maxlength="4000"
-        placeholder="Ex : « Nous avons besoin d'un système de communication acoustique sous-marin permettant à un sous-marin de transmettre des données à un navire de surface à une profondeur maximale de 400 mètres, avec un débit minimal de 1 kbps et une portée de 10 km. Le système doit résister à une pression de 40 bar et fonctionner en bande VLF/ELF... »"></textarea>
+        placeholder="Ex : « Nous avons besoin d'un système de communication acoustique sous-marin permettant à un sous-marin de transmettre des données à un navire de surface à une profondeur maximale de 400 mètres, avec un débit minimal de 1 kbps et une portée de 10 km... »"></textarea>
       <div class="char-count"><span id="char-count">0</span> / 4000</div>
 
       <div class="quick-examples">
@@ -173,19 +296,19 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
         <span id="btn-label">⬡ ANALYSER</span>
       </button>
       <div class="progress-bar-wrap" id="progress-wrap">
-        <div class="progress-bar" id="progress-bar"></div>
+        <div class="progress-bar"></div>
       </div>
     </div>
   </div>
 
-  <!-- PANNEAU RÉSULTATS -->
+  <!-- PANNEAU DROIT : RÉSULTATS ÉDITABLES -->
   <div class="panel" id="result-panel">
     <div class="panel-header">
       <span class="panel-title">Exigences Extraites</span>
       <span class="panel-badge" id="result-badge">EN ATTENTE</span>
     </div>
-    <div class="panel-body" id="result-body">
-      <div class="results-placeholder" id="placeholder">
+    <div id="result-body">
+      <div class="results-placeholder">
         <div class="radar-anim"></div>
         <div class="placeholder-text">En attente d'analyse...</div>
         <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">
@@ -193,9 +316,17 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
         </div>
       </div>
     </div>
+    <!-- Barre "mode édition" -->
+    <div class="edit-mode-bar" id="edit-mode-bar" style="display:none;">
+      <div class="edit-indicator"></div>
+      <span>MODE ÉDITION ACTIF — Cliquez sur n'importe quel champ pour le modifier</span>
+    </div>
+    <!-- Boutons export -->
     <div class="export-bar" id="export-bar" style="display:none;">
-      <button class="btn-export" id="btn-export-json">⬇ Exporter JSON (local)</button>
-      <button class="btn-export" id="btn-copy-json">◻ Copier JSON</button>
+      <button class="btn-export" id="btn-export-json" title="Sauvegarder en JSON local">⬇ JSON</button>
+      <button class="btn-export btn-word" id="btn-export-word" title="Télécharger en Word (.docx)">📄 Word</button>
+      <button class="btn-export btn-excel" id="btn-export-excel" title="Télécharger en Excel (.xlsx)">📊 Excel</button>
+      <button class="btn-export" id="btn-copy-json" title="Copier le JSON dans le presse-papiers">◻ Copier</button>
     </div>
   </div>
 
@@ -205,6 +336,9 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 <div id="toast"></div>
 
 <script>
+/* =========================================================================
+   EXEMPLES PRÉDÉFINIS
+========================================================================= */
 const EXAMPLES = {
   sonar:`Nous avons besoin d'un sonar passif basse fréquence embarqué sur sous-marin de classe Rubis. Le système doit détecter des contacts à une distance minimale de 25 km dans un environnement à fort bruit de fond (trafic maritime dense). La profondeur maximale d'opération est de 300 mètres, avec une pression hydrostatique de 30 bar. L'interférence de la propulsion nucléaire doit être minimisée. Autonomie de traitement : temps réel, latence < 200 ms.`,
   vlf:`Besoin d'une antenne VLF/ELF tractée pour sous-marin en immersion. Elle doit permettre la réception de messages de commandement OTAN en bande VLF (3–30 kHz) et ELF (3–300 Hz) depuis des stations terrestres (ex : Rosnay). Longueur maximale de l'antenne tractée : 2 km. Vitesse de navigation maximale pendant déploiement : 8 nœuds. Profondeur de traction : jusqu'à 150 m.`,
@@ -212,137 +346,550 @@ const EXAMPLES = {
   torpedo:`Torpille légère anti-sous-marine pour frégates de la Marine nationale. Masse maximale : 350 kg. Vitesse minimale : 40 nœuds. Profondeur maximale : 500 m. Guidage : acoustique actif/passif + fil. Tête militaire : 90 kg d'explosif. Interface navire : MIL-STD-1553B. Résistance à la pression : 50 bar.`
 };
 
-const textarea    = document.getElementById('demande-input');
-const charCount   = document.getElementById('char-count');
-const btnAnalyse  = document.getElementById('btn-analyse');
-const btnLabel    = document.getElementById('btn-label');
+/* =========================================================================
+   REFS DOM
+========================================================================= */
+const textarea     = document.getElementById('demande-input');
+const charCount    = document.getElementById('char-count');
+const btnAnalyse   = document.getElementById('btn-analyse');
+const btnLabel     = document.getElementById('btn-label');
 const progressWrap = document.getElementById('progress-wrap');
-const resultBody  = document.getElementById('result-body');
-const resultBadge = document.getElementById('result-badge');
-const exportBar   = document.getElementById('export-bar');
-const modelSelect = document.getElementById('model-select');
-const statusDot   = document.getElementById('status-dot');
-const statusLabel = document.getElementById('status-label');
-const toast       = document.getElementById('toast');
-let currentResult = null;
+const resultBody   = document.getElementById('result-body');
+const resultBadge  = document.getElementById('result-badge');
+const exportBar    = document.getElementById('export-bar');
+const editModeBar  = document.getElementById('edit-mode-bar');
+const modelSelect  = document.getElementById('model-select');
+const statusDot    = document.getElementById('status-dot');
+const statusLabel  = document.getElementById('status-label');
+const toast        = document.getElementById('toast');
 
-textarea.addEventListener('input', () => { charCount.textContent = textarea.value.length; });
+let currentResult = null;  // Objet JSON brut (mis à jour à chaque édition)
 
-document.querySelectorAll('.example-chip').forEach(c => {
-  c.addEventListener('click', () => {
-    if(EXAMPLES[c.dataset.example]){ textarea.value = EXAMPLES[c.dataset.example]; charCount.textContent = textarea.value.length; textarea.focus(); }
-  });
-});
+/* =========================================================================
+   UTILITAIRES
+========================================================================= */
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+let toastTimeout;
+function showToast(msg, type='', duration=3000){
+  toast.textContent = msg;
+  toast.className = 'show ' + type;
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(()=>{ toast.className=''; }, duration);
+}
+
+/* =========================================================================
+   STATUT OLLAMA + MODÈLES
+========================================================================= */
 async function checkStatus(){
   try{
-    const r = await fetch('/models'); const d = await r.json();
-    statusDot.classList.add('online'); statusLabel.textContent='OLLAMA ACTIF';
-    modelSelect.innerHTML='';
+    const r = await fetch('/models');
+    const d = await r.json();
+    statusDot.classList.add('online');
+    statusLabel.textContent = 'OLLAMA ACTIF';
+    modelSelect.innerHTML = '';
     const models = (d.models && d.models.length) ? d.models : ['llama3','mistral'];
-    models.forEach(m=>{ const o=document.createElement('option'); o.value=o.textContent=m; modelSelect.appendChild(o); });
-  }catch{
-    statusDot.classList.add('err'); statusLabel.textContent='OLLAMA HORS LIGNE';
+    models.forEach(m => {
+      const o = document.createElement('option');
+      o.value = o.textContent = m;
+      modelSelect.appendChild(o);
+    });
+  } catch {
+    statusDot.classList.add('err');
+    statusLabel.textContent = 'OLLAMA HORS LIGNE';
     showToast('Ollama non détecté. Lancez "ollama serve".','err-toast',5000);
   }
 }
 checkStatus();
 
+/* Compteur de caractères */
+textarea.addEventListener('input', () => { charCount.textContent = textarea.value.length; });
+
+/* Exemples rapides */
+document.querySelectorAll('.example-chip').forEach(c => {
+  c.addEventListener('click', () => {
+    if(EXAMPLES[c.dataset.example]){
+      textarea.value = EXAMPLES[c.dataset.example];
+      charCount.textContent = textarea.value.length;
+      textarea.focus();
+    }
+  });
+});
+
+/* =========================================================================
+   ANALYSE PRINCIPALE
+========================================================================= */
 btnAnalyse.addEventListener('click', async () => {
   const demande = textarea.value.trim();
   if(!demande){ showToast('Saisissez une demande avant d\'analyser.','err-toast'); return; }
-  btnAnalyse.disabled=true; btnLabel.textContent='⟳ ANALYSE EN COURS...';
-  progressWrap.classList.add('active'); exportBar.style.display='none';
-  resultBadge.textContent='TRAITEMENT...';
-  resultBody.innerHTML=`<div class="results-placeholder"><div class="radar-anim" style="border-color:var(--accent);"></div><div class="placeholder-text" style="color:var(--accent);">Interrogation du modèle...</div><div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">Modèle : ${modelSelect.value} — Veuillez patienter.</div></div>`;
 
-  try{
-    const r = await fetch('/analyse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({demande,model:modelSelect.value})});
+  btnAnalyse.disabled = true;
+  btnLabel.textContent = '⟳ ANALYSE EN COURS...';
+  progressWrap.classList.add('active');
+  exportBar.style.display = 'none';
+  editModeBar.style.display = 'none';
+  resultBadge.textContent = 'TRAITEMENT...';
+  resultBody.innerHTML = `
+    <div class="results-placeholder">
+      <div class="radar-anim" style="border-color:var(--accent);"></div>
+      <div class="placeholder-text" style="color:var(--accent);">Interrogation du modèle...</div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">
+        Modèle : ${modelSelect.value} — Veuillez patienter.
+      </div>
+    </div>`;
+
+  try {
+    const r = await fetch('/analyse', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ demande, model: modelSelect.value })
+    });
     const data = await r.json();
-    if(!r.ok||data.error) throw new Error(data.error||'Erreur serveur');
-    currentResult=data; renderResult(data);
-    resultBadge.textContent='COMPLÉTÉ'; exportBar.style.display='flex';
-    showToast('Analyse terminée avec succès.','success');
-  }catch(err){
-    resultBody.innerHTML=`<div class="error-box"><strong>ERREUR D'ANALYSE</strong><br/><br/>${escHtml(err.message)}<br/><br/><span style="color:var(--text-muted);">Vérifiez qu'Ollama est démarré et que le modèle est téléchargé.<br/>Commandes : <code>ollama serve</code> puis <code>ollama pull llama3</code></span></div>`;
-    resultBadge.textContent='ERREUR';
-    showToast('Erreur : '+err.message,'err-toast',5000);
-  }finally{
-    btnAnalyse.disabled=false; btnLabel.textContent='⬡ ANALYSER';
+    if(!r.ok || data.error) throw new Error(data.error || 'Erreur serveur');
+
+    currentResult = data;
+    renderResult(data);
+    resultBadge.textContent = 'COMPLÉTÉ — ÉDITABLE';
+    exportBar.style.display = 'flex';
+    editModeBar.style.display = 'flex';
+    showToast('Analyse terminée. Tous les champs sont éditables.', 'success', 4000);
+
+  } catch(err) {
+    resultBody.innerHTML = `
+      <div class="error-box">
+        <strong>ERREUR D'ANALYSE</strong><br/><br/>
+        ${escHtml(err.message)}<br/><br/>
+        <span style="color:var(--text-muted);">
+          Vérifiez qu'Ollama est démarré et que le modèle est téléchargé.<br/>
+          Commandes : <code>ollama serve</code> puis <code>ollama pull llama3</code>
+        </span>
+      </div>`;
+    resultBadge.textContent = 'ERREUR';
+    showToast('Erreur : ' + err.message, 'err-toast', 5000);
+  } finally {
+    btnAnalyse.disabled = false;
+    btnLabel.textContent = '⬡ ANALYSER';
     progressWrap.classList.remove('active');
   }
 });
 
-function renderResult(d){
-  const p=d.perimetre||{},ef=d.exigences_fonctionnelles||[],ct=d.contraintes_techniques||{},kw=d.mots_cles_domaine||[],meta=d._meta||{};
-  const contraintes=[
-    {label:'Acoustique',key:'acoustique'},{label:'Fréquences',key:'frequences'},
-    {label:'Étanchéité / Pression',key:'etancheite_pression'},{label:'Débit / Latence',key:'debit_latence'},
-    {label:'Env. physique',key:'environnement_physique'}
+/* =========================================================================
+   RENDU ÉDITABLE
+========================================================================= */
+function renderResult(d) {
+  const p   = d.perimetre || {};
+  const ef  = d.exigences_fonctionnelles || [];
+  const ct  = d.contraintes_techniques || {};
+  const kw  = d.mots_cles_domaine || [];
+  const meta = d._meta || {};
+
+  const CONTRAINTES_DEF = [
+    { label:'Acoustique',       key:'acoustique' },
+    { label:'Fréquences',       key:'frequences' },
+    { label:'Étanchéité / P.',  key:'etancheite_pression' },
+    { label:'Débit / Latence',  key:'debit_latence' },
+    { label:'Env. physique',    key:'environnement_physique' },
   ];
-  const autres=Array.isArray(ct.autres)?ct.autres:[];
-  resultBody.innerHTML=`
-    <div class="result-section">
-      <div class="section-title">Périmètre</div>
-      <div style="margin-bottom:8px;"><div class="sub-card-label">Système sous analyse</div>
-        <span class="tag" style="font-size:13px;padding:4px 12px;">${escHtml(p.systeme_sous_analyse||'Non spécifié')}</span>
-      </div>
-      <div class="perimetre-grid">
-        <div class="sub-card"><div class="sub-card-label">Acteurs externes</div><div class="tag-list">
-          ${(p.acteurs_externes||[]).map(a=>`<span class="tag">${escHtml(a)}</span>`).join('')||'<span style="color:var(--text-muted);font-size:11px;">Aucun</span>'}
-        </div></div>
-        <div class="sub-card"><div class="sub-card-label">Milieux externes</div><div class="tag-list">
-          ${(p.milieux_externes||[]).map(m=>`<span class="tag green">${escHtml(m)}</span>`).join('')||'<span style="color:var(--text-muted);font-size:11px;">Aucun</span>'}
-        </div></div>
-      </div>
-    </div>
-    <div class="result-section">
-      <div class="section-title">Besoin Fondamental</div>
-      <div class="besoin-text">${escHtml(d.besoin_fondamental||'Non spécifié')}</div>
-    </div>
-    <div class="result-section">
-      <div class="section-title">Exigences Fonctionnelles (${ef.length})</div>
-      <div class="exigences-list">
-        ${ef.map((e,i)=>`<div class="exigence-item"><span class="exigence-num">EF-${String(i+1).padStart(2,'0')}</span><span>${escHtml(e).replace(/^(Le syst[eè]me DOIT)/i,'<span class="exigence-must">$1</span>')}</span></div>`).join('')||'<div style="color:var(--text-muted)">Aucune exigence extraite.</div>'}
-      </div>
-    </div>
-    <div class="result-section">
-      <div class="section-title">Contraintes Techniques</div>
-      <div class="contraintes-grid">
-        ${contraintes.map(c=>{const v=ct[c.key]||'Non spécifié',na=v==='N/A'||v==='Non spécifié';return`<div class="contrainte-card"><div class="contrainte-label">${c.label}</div><div class="contrainte-val${na?' na':''}">${escHtml(v)}</div></div>`;}).join('')}
-        ${autres.length?`<div class="contrainte-card" style="grid-column:1/-1;"><div class="contrainte-label">Autres contraintes</div><div class="tag-list" style="margin-top:4px;">${autres.map(a=>`<span class="tag orange">${escHtml(a)}</span>`).join('')}</div></div>`:''}
-      </div>
-    </div>
-    ${kw.length?`<div class="result-section"><div class="section-title">Mots-clés Domaine</div><div class="keywords-wrap">${kw.map(k=>`<span class="tag orange">${escHtml(k)}</span>`).join('')}</div></div>`:''}
-    <div style="margin-top:16px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);letter-spacing:1px;">
-      Modèle : ${escHtml(meta.model||'?')} &nbsp;|&nbsp; ${meta.timestamp?new Date(meta.timestamp).toLocaleString('fr-FR'):''}
-    </div>`;
+
+  /* ---- Helper : tag éditable ---- */
+  function makeTag(text, cssClass='', onDelete, onEdit) {
+    const tag = document.createElement('span');
+    tag.className = 'tag' + (cssClass ? ' '+cssClass : '');
+
+    const span = document.createElement('span');
+    span.contentEditable = 'true';
+    span.textContent = text;
+    span.addEventListener('blur', () => { if(onEdit) onEdit(span.textContent.trim()); });
+    span.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); span.blur(); } });
+
+    const del = document.createElement('span');
+    del.className = 'del-tag';
+    del.textContent = '×';
+    del.title = 'Supprimer';
+    del.addEventListener('click', () => { tag.remove(); if(onDelete) onDelete(); syncResult(); });
+
+    tag.appendChild(span);
+    tag.appendChild(del);
+    return tag;
+  }
+
+  /* ---- Helper : bouton + ajouter tag ---- */
+  function makeAddTagBtn(container, cssClass, defaultText) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-add-tag';
+    btn.textContent = '+ Ajouter';
+    btn.addEventListener('click', () => {
+      const tag = makeTag(defaultText, cssClass, null, null);
+      container.insertBefore(tag, btn);
+      // Focus sur le nouveau tag
+      tag.querySelector('span[contenteditable]').focus();
+      syncResult();
+    });
+    return btn;
+  }
+
+  /* ---- Conteneur principal ---- */
+  resultBody.innerHTML = '';
+
+  /* ===== PÉRIMÈTRE ===== */
+  const secPerimetre = document.createElement('div');
+  secPerimetre.className = 'result-section';
+  secPerimetre.innerHTML = '<div class="section-title">Périmètre</div>';
+
+  // Système sous analyse
+  const systemeWrap = document.createElement('div');
+  systemeWrap.style.marginBottom = '10px';
+  const systemeLabel = document.createElement('div');
+  systemeLabel.className = 'sub-card-label';
+  systemeLabel.textContent = 'Système sous analyse';
+  const systemeBadge = document.createElement('div');
+  systemeBadge.className = 'systeme-badge';
+  const systemeSpan = document.createElement('span');
+  systemeSpan.contentEditable = 'true';
+  systemeSpan.textContent = p.systeme_sous_analyse || 'Non spécifié';
+  systemeSpan.addEventListener('blur', syncResult);
+  systemeBadge.appendChild(systemeSpan);
+  systemeWrap.appendChild(systemeLabel);
+  systemeWrap.appendChild(systemeBadge);
+  secPerimetre.appendChild(systemeWrap);
+
+  // Grid acteurs / milieux
+  const grid = document.createElement('div');
+  grid.className = 'perimetre-grid';
+
+  function makeTagSection(title, items, cssClass, defaultText) {
+    const card = document.createElement('div');
+    card.className = 'sub-card';
+    card.innerHTML = `<div class="sub-card-label">${title}</div>`;
+    const list = document.createElement('div');
+    list.className = 'tag-list';
+    (items || []).forEach(item => {
+      list.appendChild(makeTag(item, cssClass, syncResult, syncResult));
+    });
+    list.appendChild(makeAddTagBtn(list, cssClass, defaultText));
+    card.appendChild(list);
+    return card;
+  }
+
+  grid.appendChild(makeTagSection('Acteurs externes', p.acteurs_externes, '', 'Nouvel acteur'));
+  grid.appendChild(makeTagSection('Milieux externes', p.milieux_externes, 'green', 'Nouveau milieu'));
+  secPerimetre.appendChild(grid);
+  resultBody.appendChild(secPerimetre);
+
+  /* ===== BESOIN FONDAMENTAL ===== */
+  const secBesoin = document.createElement('div');
+  secBesoin.className = 'result-section';
+  secBesoin.innerHTML = '<div class="section-title">Besoin Fondamental</div>';
+  const besoinDiv = document.createElement('div');
+  besoinDiv.className = 'besoin-text';
+  besoinDiv.contentEditable = 'true';
+  besoinDiv.textContent = d.besoin_fondamental || 'Non spécifié';
+  besoinDiv.addEventListener('blur', syncResult);
+  secBesoin.appendChild(besoinDiv);
+  resultBody.appendChild(secBesoin);
+
+  /* ===== EXIGENCES FONCTIONNELLES ===== */
+  const secEF = document.createElement('div');
+  secEF.className = 'result-section';
+  const efTitleDiv = document.createElement('div');
+  efTitleDiv.className = 'section-title';
+  efTitleDiv.id = 'ef-title';
+  efTitleDiv.textContent = `Exigences Fonctionnelles (${ef.length})`;
+  secEF.appendChild(efTitleDiv);
+
+  const efList = document.createElement('div');
+  efList.className = 'exigences-list';
+  efList.id = 'ef-list';
+
+  function makeEFItem(text) {
+    const item = document.createElement('div');
+    item.className = 'exigence-item';
+    item.draggable = true;
+
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '⠿';
+    handle.title = 'Glisser pour réordonner';
+
+    const num = document.createElement('span');
+    num.className = 'exigence-num';
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'exigence-text';
+    textSpan.contentEditable = 'true';
+
+    // Coloration "Le système DOIT"
+    textSpan.innerHTML = escHtml(text).replace(
+      /^(Le syst[eè]me DOIT)/i,
+      '<span class="exigence-must">$1</span>'
+    );
+    textSpan.addEventListener('blur', () => {
+      // Recolorer après édition
+      const t = textSpan.textContent;
+      textSpan.innerHTML = escHtml(t).replace(
+        /^(Le syst[eè]me DOIT)/i,
+        '<span class="exigence-must">$1</span>'
+      );
+      syncResult();
+    });
+    textSpan.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){ e.preventDefault(); textSpan.blur(); }
+    });
+
+    const del = document.createElement('span');
+    del.className = 'del-row';
+    del.textContent = '×';
+    del.title = 'Supprimer cette exigence';
+    del.addEventListener('click', () => { item.remove(); renumberEF(); syncResult(); });
+
+    item.appendChild(handle);
+    item.appendChild(num);
+    item.appendChild(textSpan);
+    item.appendChild(del);
+
+    // Drag & drop
+    item.addEventListener('dragstart', e => {
+      e.dataTransfer.effectAllowed = 'move';
+      item.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', ''); // Firefox fix
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      document.querySelectorAll('.exigence-item').forEach(i => i.classList.remove('drag-over'));
+      renumberEF(); syncResult();
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const dragging = efList.querySelector('.dragging');
+      if(dragging && dragging !== item){
+        document.querySelectorAll('.exigence-item').forEach(i => i.classList.remove('drag-over'));
+        item.classList.add('drag-over');
+        const rect = item.getBoundingClientRect();
+        const mid = rect.top + rect.height/2;
+        if(e.clientY < mid) efList.insertBefore(dragging, item);
+        else efList.insertBefore(dragging, item.nextSibling);
+      }
+    });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', e => { e.preventDefault(); });
+
+    return item;
+  }
+
+  ef.forEach(text => efList.appendChild(makeEFItem(text)));
+
+  // Bouton ajouter exigence
+  const btnAddEF = document.createElement('button');
+  btnAddEF.className = 'btn-add-row';
+  btnAddEF.textContent = '+ Ajouter une exigence';
+  btnAddEF.addEventListener('click', () => {
+    const item = makeEFItem('Le système DOIT ');
+    efList.appendChild(item);
+    // Focus sur le champ texte du nouvel item
+    const tf = item.querySelector('.exigence-text');
+    tf.focus();
+    // Placer le curseur en fin
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(tf);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    renumberEF(); syncResult();
+  });
+
+  secEF.appendChild(efList);
+  secEF.appendChild(btnAddEF);
+  resultBody.appendChild(secEF);
+  renumberEF();
+
+  function renumberEF() {
+    const items = efList.querySelectorAll('.exigence-item');
+    items.forEach((item, i) => {
+      const num = item.querySelector('.exigence-num');
+      if(num) num.textContent = `EF-${String(i+1).padStart(2,'0')}`;
+    });
+    const title = document.getElementById('ef-title');
+    if(title) title.textContent = `Exigences Fonctionnelles (${items.length})`;
+  }
+
+  /* ===== CONTRAINTES TECHNIQUES ===== */
+  const secCT = document.createElement('div');
+  secCT.className = 'result-section';
+  secCT.innerHTML = '<div class="section-title">Contraintes Techniques</div>';
+  const ctGrid = document.createElement('div');
+  ctGrid.className = 'contraintes-grid';
+
+  CONTRAINTES_DEF.forEach(({ label, key }) => {
+    const val = ct[key] || 'Non spécifié';
+    const isNA = val === 'N/A' || val === 'Non spécifié';
+    const card = document.createElement('div');
+    card.className = 'contrainte-card';
+    card.innerHTML = `<div class="contrainte-label">${label}</div>`;
+    const valDiv = document.createElement('div');
+    valDiv.className = 'contrainte-val' + (isNA ? ' na' : '');
+    valDiv.contentEditable = 'true';
+    valDiv.textContent = val;
+    valDiv.dataset.ctKey = key;
+    valDiv.addEventListener('focus', () => valDiv.classList.remove('na'));
+    valDiv.addEventListener('blur', () => { syncResult(); });
+    card.appendChild(valDiv);
+    ctGrid.appendChild(card);
+  });
+
+  // Autres contraintes (tags)
+  const autresCard = document.createElement('div');
+  autresCard.className = 'contrainte-card';
+  autresCard.style.gridColumn = '1/-1';
+  autresCard.innerHTML = '<div class="contrainte-label">Autres contraintes</div>';
+  const autresList = document.createElement('div');
+  autresList.className = 'tag-list';
+  autresList.style.marginTop = '4px';
+  const autresArr = Array.isArray(ct.autres) ? ct.autres : [];
+  autresArr.forEach(a => autresList.appendChild(makeTag(a, 'orange', syncResult, syncResult)));
+  autresList.appendChild(makeAddTagBtn(autresList, 'orange', 'Nouvelle contrainte'));
+  autresCard.appendChild(autresList);
+  ctGrid.appendChild(autresCard);
+
+  secCT.appendChild(ctGrid);
+  resultBody.appendChild(secCT);
+
+  /* ===== MOTS-CLÉS ===== */
+  if(kw.length > 0 || true) {
+    const secKW = document.createElement('div');
+    secKW.className = 'result-section';
+    secKW.innerHTML = '<div class="section-title">Mots-clés Domaine</div>';
+    const kwWrap = document.createElement('div');
+    kwWrap.className = 'keywords-wrap';
+    kwWrap.id = 'kw-wrap';
+    kw.forEach(k => kwWrap.appendChild(makeTag(k, 'orange', syncResult, syncResult)));
+    kwWrap.appendChild(makeAddTagBtn(kwWrap, 'orange', 'Nouveau mot-clé'));
+    secKW.appendChild(kwWrap);
+    resultBody.appendChild(secKW);
+  }
+
+  /* ===== MÉTADONNÉES ===== */
+  const metaDiv = document.createElement('div');
+  metaDiv.style.cssText = 'margin-top:16px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);letter-spacing:1px;';
+  metaDiv.textContent = `Modèle : ${meta.model || '?'}  |  ${meta.timestamp ? new Date(meta.timestamp).toLocaleString('fr-FR') : ''}`;
+  resultBody.appendChild(metaDiv);
 }
 
-document.getElementById('btn-export-json').addEventListener('click',async()=>{
-  if(!currentResult)return;
-  try{
-    const r=await fetch('/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({result:currentResult})});
-    const d=await r.json();
-    if(d.filename) showToast('✓ Exporté : exports/'+d.filename,'success',4000);
-    else throw new Error(d.error||'Erreur');
-  }catch(e){ showToast('Erreur export : '+e.message,'err-toast',4000); }
-});
+/* =========================================================================
+   SYNC : reconstruit currentResult depuis le DOM
+========================================================================= */
+function syncResult() {
+  if(!currentResult) return;
 
-document.getElementById('btn-copy-json').addEventListener('click',()=>{
-  if(!currentResult)return;
-  navigator.clipboard.writeText(JSON.stringify(currentResult,null,2))
-    .then(()=>showToast('JSON copié dans le presse-papiers.','success'))
-    .catch(()=>showToast('Impossible de copier.','err-toast'));
-});
+  // Périmètre
+  const systemeEl = resultBody.querySelector('.systeme-badge span[contenteditable]');
+  if(systemeEl) currentResult.perimetre.systeme_sous_analyse = systemeEl.textContent.trim();
 
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  const subCards = resultBody.querySelectorAll('.perimetre-grid .sub-card');
+  if(subCards[0]) {
+    currentResult.perimetre.acteurs_externes = [...subCards[0].querySelectorAll('.tag span[contenteditable]')]
+      .map(s => s.textContent.trim()).filter(Boolean);
+  }
+  if(subCards[1]) {
+    currentResult.perimetre.milieux_externes = [...subCards[1].querySelectorAll('.tag span[contenteditable]')]
+      .map(s => s.textContent.trim()).filter(Boolean);
+  }
 
-let toastTimeout;
-function showToast(msg,type='',duration=3000){
-  toast.textContent=msg; toast.className='show '+type;
-  clearTimeout(toastTimeout); toastTimeout=setTimeout(()=>{toast.className=''},duration);
+  // Besoin fondamental
+  const besoinEl = resultBody.querySelector('.besoin-text');
+  if(besoinEl) currentResult.besoin_fondamental = besoinEl.textContent.trim();
+
+  // Exigences fonctionnelles
+  const efItems = resultBody.querySelectorAll('#ef-list .exigence-item .exigence-text');
+  currentResult.exigences_fonctionnelles = [...efItems].map(el => el.textContent.trim()).filter(Boolean);
+
+  // Contraintes techniques
+  resultBody.querySelectorAll('.contrainte-val[data-ct-key]').forEach(el => {
+    currentResult.contraintes_techniques[el.dataset.ctKey] = el.textContent.trim();
+  });
+
+  // Autres contraintes
+  const autresWrap = resultBody.querySelector('.contraintes-grid .tag-list');
+  if(autresWrap) {
+    currentResult.contraintes_techniques.autres = [...autresWrap.querySelectorAll('.tag span[contenteditable]')]
+      .map(s => s.textContent.trim()).filter(Boolean);
+  }
+
+  // Mots-clés
+  const kwWrap = document.getElementById('kw-wrap');
+  if(kwWrap) {
+    currentResult.mots_cles_domaine = [...kwWrap.querySelectorAll('.tag span[contenteditable]')]
+      .map(s => s.textContent.trim()).filter(Boolean);
+  }
 }
+
+/* =========================================================================
+   EXPORT
+========================================================================= */
+/* ---- Export helpers ---- */
+async function exportViaPost(url, filename, mimeType) {
+  if(!currentResult) return;
+  syncResult();
+  try {
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ result: currentResult })
+    });
+    if(!r.ok) {
+      const err = await r.json();
+      throw new Error(err.error || 'Erreur serveur');
+    }
+    // Déclenche le téléchargement depuis le blob reçu
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('✓ Téléchargement démarré : ' + filename, 'success', 4000);
+  } catch(e) {
+    showToast('Erreur export : ' + e.message, 'err-toast', 4000);
+  }
+}
+
+document.getElementById('btn-export-json').addEventListener('click', async () => {
+  if(!currentResult) return;
+  syncResult();
+  try {
+    const r = await fetch('/export', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ result: currentResult })
+    });
+    const d = await r.json();
+    if(d.filename) showToast('✓ Exporté : exports/' + d.filename, 'success', 4000);
+    else throw new Error(d.error || 'Erreur export');
+  } catch(e) {
+    showToast('Erreur export : ' + e.message, 'err-toast', 4000);
+  }
+});
+
+document.getElementById('btn-export-word').addEventListener('click', () => {
+  const ts = new Date().toISOString().slice(0,19).replace(/[-:T]/g, (m) => m === 'T' ? '_' : m);
+  exportViaPost('/export/word', `exigences_${ts}.docx`,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+});
+
+document.getElementById('btn-export-excel').addEventListener('click', () => {
+  const ts = new Date().toISOString().slice(0,19).replace(/[-:T]/g, (m) => m === 'T' ? '_' : m);
+  exportViaPost('/export/excel', `exigences_${ts}.xlsx`,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+});
+
+document.getElementById('btn-copy-json').addEventListener('click', () => {
+  if(!currentResult) return;
+  syncResult();
+  navigator.clipboard.writeText(JSON.stringify(currentResult, null, 2))
+    .then(() => showToast('JSON copié dans le presse-papiers.', 'success'))
+    .catch(() => showToast('Impossible de copier.', 'err-toast'));
+});
 </script>
 </body>
 </html>
