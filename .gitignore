@@ -1,0 +1,8 @@
+*.exe
+*.msi
+*.dmg
+exports/
+__pycache__/
+.venv/
+*.pyc"OllamaSetup.exe" 
+"*.exe" 
