@@ -43,7 +43,7 @@ select{background:var(--bg-card);border:1px solid var(--border);color:var(--acce
 select:hover,select:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 
 /* MAIN */
-main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 0 24px;align-items:start}
+main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 0 24px;align-items:stretch}
 @media(max-width:960px){main{grid-template-columns:1fr}}
 
 /* PANELS */
@@ -53,9 +53,10 @@ main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 0 24px;ali
 .panel-title{font-family:var(--font-ui);font-weight:600;font-size:13px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
 .panel-badge{font-size:10px;letter-spacing:1px;color:var(--text-muted);border:1px solid var(--text-muted);padding:1px 7px;border-radius:2px}
 .panel-body{padding:16px}
-#result-panel{display:flex;flex-direction:column}
-#result-body{flex:1;padding:16px;overflow-y:auto;max-height:72vh}
-.edit-mode-bar,#export-bar{flex-shrink:0;position:relative;z-index:10}
+#result-panel{display:flex;flex-direction:column;min-height:0}
+#result-body{flex:1;padding:16px;overflow-y:auto;min-height:0}
+#edit-mode-bar{flex-shrink:0;position:relative;z-index:20;pointer-events:auto}
+#export-bar{flex-shrink:0;position:relative;z-index:20;pointer-events:auto}
 
 /* INPUT SIDE */
 .input-label{font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
@@ -220,7 +221,7 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .btn-excel:hover{border-color:#68d391;color:#68d391;background:rgba(104,211,145,.12)}
 
 /* TOAST */
-#toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--accent);color:var(--text);font-size:12px;padding:12px 18px;border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,.6);z-index:1000;transform:translateY(20px);opacity:0;transition:all .3s;max-width:320px;letter-spacing:.5px}
+#toast{position:fixed;bottom:24px;left:24px;background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--accent);color:var(--text);font-size:12px;padding:12px 18px;border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,.6);z-index:5;transform:translateY(20px);opacity:0;transition:all .3s;max-width:320px;letter-spacing:.5px;pointer-events:none}
 #toast.show{transform:translateY(0);opacity:1}
 #toast.success{border-left-color:var(--success)}
 #toast.err-toast{border-left-color:var(--error)}
@@ -452,7 +453,7 @@ btnAnalyse.addEventListener('click', async () => {
     resultBadge.textContent = 'COMPLÉTÉ — ÉDITABLE';
     exportBar.style.display = 'flex';
     editModeBar.style.display = 'flex';
-    showToast('Analyse terminée. Tous les champs sont éditables.', 'success', 4000);
+    // toast de fin supprimé
 
   } catch(err) {
     resultBody.innerHTML = `
