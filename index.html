@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SYREQ — Analyseur d'Exigences Naval</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#050a0f;--bg-panel:#080f16;--bg-card:#0b1520;
+  --border:#1a3a5c;--border-glow:#1e6fa8;
+  --accent:#00d4ff;--accent2:#00ff9d;--accent3:#ff6b35;
+  --text:#cde8f8;--text-dim:#5a8aaa;--text-muted:#2a5570;
+  --success:#00ff9d;--warning:#ffcc00;--error:#ff3d5a;
+  --font-mono:'Share Tech Mono',monospace;--font-ui:'Rajdhani',sans-serif;
+  --radius:3px;
+  --glow-sm:0 0 6px rgba(0,212,255,.25);
+  --glow-md:0 0 16px rgba(0,212,255,.35);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.7)100%);pointer-events:none;z-index:0}
+.app-wrapper{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr;min-height:100vh;max-width:1400px;margin:0 auto;padding:0 16px}
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 14px;border-bottom:1px solid var(--border);gap:16px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:38px;height:38px;border:1.5px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:var(--glow-sm);flex-shrink:0}
+.logo-icon::after{content:'';position:absolute;width:50%;height:50%;background:var(--accent);border-radius:50%;opacity:.8;animation:sonar-pulse 2.4s ease-in-out infinite}
+@keyframes sonar-pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.3);opacity:.3}}
+.logo-text{font-family:var(--font-ui);font-weight:700;font-size:22px;letter-spacing:4px;color:var(--accent);text-shadow:var(--glow-sm)}
+.logo-sub{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-top:-2px}
+.header-right{display:flex;align-items:center;gap:20px}
+.status-dot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);letter-spacing:1px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);transition:background .4s,box-shadow .4s}
+.dot.online{background:var(--success);box-shadow:0 0 8px var(--success);animation:blink 2s ease-in-out infinite}
+.dot.err{background:var(--error);box-shadow:0 0 8px var(--error)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.model-selector{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dim);letter-spacing:1px}
+select{background:var(--bg-card);border:1px solid var(--border);color:var(--accent);font-family:var(--font-mono);font-size:12px;padding:4px 28px 4px 10px;border-radius:var(--radius);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300d4ff'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .2s}
+select:hover,select:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
+/* MAIN */
+main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 0 24px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+/* PANELS */
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .3s}
+.panel:hover{border-color:var(--border-glow)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-card);border-bottom:1px solid var(--border)}
+.panel-title{font-family:var(--font-ui);font-weight:600;font-size:13px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+.panel-badge{font-size:10px;letter-spacing:1px;color:var(--text-muted);border:1px solid var(--text-muted);padding:1px 7px;border-radius:2px}
+.panel-body{padding:16px}
+/* INPUT */
+.input-label{font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+textarea{width:100%;min-height:250px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);font-size:12.5px;line-height:1.7;padding:12px 14px;resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s;caret-color:var(--accent)}
+textarea::placeholder{color:var(--text-muted)}
+textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
+.char-count{text-align:right;font-size:10px;color:var(--text-muted);margin-top:4px}
+.quick-examples{margin-top:14px}
+.quick-label{font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.examples-grid{display:flex;flex-wrap:wrap;gap:6px}
+.example-chip{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;padding:4px 10px;border-radius:2px;cursor:pointer;letter-spacing:.5px;transition:all .2s}
+.example-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.05)}
+.btn-analyse{width:100%;margin-top:14px;padding:13px;background:transparent;border:1.5px solid var(--accent);color:var(--accent);font-family:var(--font-ui);font-weight:700;font-size:15px;letter-spacing:3px;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;position:relative;overflow:hidden;transition:all .25s}
+.btn-analyse::before{content:'';position:absolute;inset:0;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .3s ease;z-index:0;opacity:.08}
+.btn-analyse:hover::before{transform:scaleX(1)}
+.btn-analyse:hover{box-shadow:var(--glow-md);text-shadow:0 0 8px var(--accent)}
+.btn-analyse:disabled{opacity:.4;cursor:not-allowed;border-color:var(--text-muted);color:var(--text-muted)}
+.btn-analyse span{position:relative;z-index:1}
+.progress-bar-wrap{margin-top:12px;height:3px;background:var(--bg-card);border-radius:2px;overflow:hidden;opacity:0;transition:opacity .3s}
+.progress-bar-wrap.active{opacity:1}
+.progress-bar{height:100%;width:40%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;animation:progress-slide 1.4s ease-in-out infinite;box-shadow:0 0 8px var(--accent)}
+@keyframes progress-slide{0%{transform:translateX(-150%)}100%{transform:translateX(350%)}}
+/* PLACEHOLDER */
+.results-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:380px;color:var(--text-muted);text-align:center;gap:12px}
+.radar-anim{width:80px;height:80px;border:1.5px solid var(--text-muted);border-radius:50%;position:relative;animation:radar-rotate 3s linear infinite}
+.radar-anim::before{content:'';position:absolute;top:50%;left:50%;width:50%;height:2px;background:linear-gradient(90deg,var(--text-muted),transparent);transform-origin:left center;transform:translateY(-50%)}
+.radar-anim::after{content:'';position:absolute;inset:8px;border:1px solid var(--text-muted);border-radius:50%;opacity:.4}
+@keyframes radar-rotate{to{transform:rotate(360deg)}}
+.placeholder-text{font-size:11px;letter-spacing:2px;text-transform:uppercase}
+/* RESULTS */
+.result-section{margin-bottom:16px}
+.section-title{font-family:var(--font-ui);font-weight:600;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0}
+.perimetre-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sub-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.sub-card-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.tag-list{display:flex;flex-wrap:wrap;gap:5px}
+.tag{background:rgba(0,212,255,.07);border:1px solid var(--border);color:var(--accent);font-size:11px;padding:2px 8px;border-radius:2px;letter-spacing:.5px}
+.tag.green{color:var(--accent2);background:rgba(0,255,157,.06);border-color:rgba(0,255,157,.2)}
+.tag.orange{color:var(--accent3);background:rgba(255,107,53,.07);border-color:rgba(255,107,53,.25)}
+.besoin-text{background:rgba(0,212,255,.04);border-left:3px solid var(--accent);padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;border-radius:0 var(--radius) var(--radius) 0}
+.exigences-list{display:flex;flex-direction:column;gap:6px}
+.exigence-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;font-size:12px;line-height:1.5;display:flex;gap:10px;align-items:flex-start;transition:border-color .2s}
+.exigence-item:hover{border-color:var(--accent2)}
+.exigence-num{color:var(--accent2);font-size:10px;font-weight:bold;letter-spacing:1px;flex-shrink:0;margin-top:1px}
+.exigence-must{color:var(--accent3);font-weight:bold}
+.contraintes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.contrainte-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:9px 11px;font-size:11px}
+.contrainte-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px}
+.contrainte-val{color:var(--text);line-height:1.4}
+.contrainte-val.na{color:var(--text-muted);font-style:italic}
+.keywords-wrap{display:flex;flex-wrap:wrap;gap:6px}
+/* EXPORT */
+.export-bar{display:flex;gap:10px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border)}
+.btn-export{flex:1;padding:9px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:all .2s}
+.btn-export:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(0,255,157,.05)}
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--accent);color:var(--text);font-size:12px;padding:12px 18px;border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,.6);z-index:1000;transform:translateY(20px);opacity:0;transition:all .3s;max-width:320px;letter-spacing:.5px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{border-left-color:var(--success)}
+#toast.err-toast{border-left-color:var(--error)}
+.error-box{background:rgba(255,61,90,.07);border:1px solid rgba(255,61,90,.3);border-radius:var(--radius);padding:14px;color:var(--error);font-size:12px;line-height:1.6}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-glow)}
+</style>
+</head>
+<body>
+<div class="app-wrapper">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">SYREQ</div>
+      <div class="logo-sub">SYSTÈME D'EXTRACTION D'EXIGENCES NAVAL</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="model-selector">
+      <span>MODÈLE</span>
+      <select id="model-select">
+        <option value="llama3">llama3</option>
+        <option value="mistral">mistral</option>
+      </select>
+    </div>
+    <div class="status-dot">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-label">VÉRIFICATION...</span>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- PANNEAU ENTRÉE -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Demande Client</span>
+      <span class="panel-badge">TEXTE BRUT</span>
+    </div>
+    <div class="panel-body">
+      <div class="input-label">Saisir ou coller la demande à analyser :</div>
+      <textarea id="demande-input" maxlength="4000"
+        placeholder="Ex : « Nous avons besoin d'un système de communication acoustique sous-marin permettant à un sous-marin de transmettre des données à un navire de surface à une profondeur maximale de 400 mètres, avec un débit minimal de 1 kbps et une portée de 10 km. Le système doit résister à une pression de 40 bar et fonctionner en bande VLF/ELF... »"></textarea>
+      <div class="char-count"><span id="char-count">0</span> / 4000</div>
+
+      <div class="quick-examples">
+        <div class="quick-label">Exemples rapides :</div>
+        <div class="examples-grid">
+          <button class="example-chip" data-example="sonar">Sonar passif</button>
+          <button class="example-chip" data-example="vlf">Antenne VLF</button>
+          <button class="example-chip" data-example="comms">Liaison données</button>
+          <button class="example-chip" data-example="torpedo">Torpille légère</button>
+        </div>
+      </div>
+
+      <button class="btn-analyse" id="btn-analyse">
+        <span id="btn-label">⬡ ANALYSER</span>
+      </button>
+      <div class="progress-bar-wrap" id="progress-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANNEAU RÉSULTATS -->
+  <div class="panel" id="result-panel">
+    <div class="panel-header">
+      <span class="panel-title">Exigences Extraites</span>
+      <span class="panel-badge" id="result-badge">EN ATTENTE</span>
+    </div>
+    <div class="panel-body" id="result-body">
+      <div class="results-placeholder" id="placeholder">
+        <div class="radar-anim"></div>
+        <div class="placeholder-text">En attente d'analyse...</div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">
+          Saisir une demande puis lancer l'analyse
+        </div>
+      </div>
+    </div>
+    <div class="export-bar" id="export-bar" style="display:none;">
+      <button class="btn-export" id="btn-export-json">⬇ Exporter JSON (local)</button>
+      <button class="btn-export" id="btn-copy-json">◻ Copier JSON</button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const EXAMPLES = {
+  sonar:`Nous avons besoin d'un sonar passif basse fréquence embarqué sur sous-marin de classe Rubis. Le système doit détecter des contacts à une distance minimale de 25 km dans un environnement à fort bruit de fond (trafic maritime dense). La profondeur maximale d'opération est de 300 mètres, avec une pression hydrostatique de 30 bar. L'interférence de la propulsion nucléaire doit être minimisée. Autonomie de traitement : temps réel, latence < 200 ms.`,
+  vlf:`Besoin d'une antenne VLF/ELF tractée pour sous-marin en immersion. Elle doit permettre la réception de messages de commandement OTAN en bande VLF (3–30 kHz) et ELF (3–300 Hz) depuis des stations terrestres (ex : Rosnay). Longueur maximale de l'antenne tractée : 2 km. Vitesse de navigation maximale pendant déploiement : 8 nœuds. Profondeur de traction : jusqu'à 150 m.`,
+  comms:`Système de liaison de données acoustique bidirectionnel entre un sous-marin et un AUV. Portée requise : 5 km. Profondeur max : 600 m (pression : 60 bar). Débit minimal : 500 bps. Le système doit être étanche IP68, résistant à la corrosion marine (eau de mer à 3,5% NaCl), et opérationnel de 0°C à 30°C. Contrainte poids : < 15 kg.`,
+  torpedo:`Torpille légère anti-sous-marine pour frégates de la Marine nationale. Masse maximale : 350 kg. Vitesse minimale : 40 nœuds. Profondeur maximale : 500 m. Guidage : acoustique actif/passif + fil. Tête militaire : 90 kg d'explosif. Interface navire : MIL-STD-1553B. Résistance à la pression : 50 bar.`
+};
+
+const textarea    = document.getElementById('demande-input');
+const charCount   = document.getElementById('char-count');
+const btnAnalyse  = document.getElementById('btn-analyse');
+const btnLabel    = document.getElementById('btn-label');
+const progressWrap = document.getElementById('progress-wrap');
+const resultBody  = document.getElementById('result-body');
+const resultBadge = document.getElementById('result-badge');
+const exportBar   = document.getElementById('export-bar');
+const modelSelect = document.getElementById('model-select');
+const statusDot   = document.getElementById('status-dot');
+const statusLabel = document.getElementById('status-label');
+const toast       = document.getElementById('toast');
+let currentResult = null;
+
+textarea.addEventListener('input', () => { charCount.textContent = textarea.value.length; });
+
+document.querySelectorAll('.example-chip').forEach(c => {
+  c.addEventListener('click', () => {
+    if(EXAMPLES[c.dataset.example]){ textarea.value = EXAMPLES[c.dataset.example]; charCount.textContent = textarea.value.length; textarea.focus(); }
+  });
+});
+
+async function checkStatus(){
+  try{
+    const r = await fetch('/models'); const d = await r.json();
+    statusDot.classList.add('online'); statusLabel.textContent='OLLAMA ACTIF';
+    modelSelect.innerHTML='';
+    const models = (d.models && d.models.length) ? d.models : ['llama3','mistral'];
+    models.forEach(m=>{ const o=document.createElement('option'); o.value=o.textContent=m; modelSelect.appendChild(o); });
+  }catch{
+    statusDot.classList.add('err'); statusLabel.textContent='OLLAMA HORS LIGNE';
+    showToast('Ollama non détecté. Lancez "ollama serve".','err-toast',5000);
+  }
+}
+checkStatus();
+
+btnAnalyse.addEventListener('click', async () => {
+  const demande = textarea.value.trim();
+  if(!demande){ showToast('Saisissez une demande avant d\'analyser.','err-toast'); return; }
+  btnAnalyse.disabled=true; btnLabel.textContent='⟳ ANALYSE EN COURS...';
+  progressWrap.classList.add('active'); exportBar.style.display='none';
+  resultBadge.textContent='TRAITEMENT...';
+  resultBody.innerHTML=`<div class="results-placeholder"><div class="radar-anim" style="border-color:var(--accent);"></div><div class="placeholder-text" style="color:var(--accent);">Interrogation du modèle...</div><div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">Modèle : ${modelSelect.value} — Veuillez patienter.</div></div>`;
+
+  try{
+    const r = await fetch('/analyse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({demande,model:modelSelect.value})});
+    const data = await r.json();
+    if(!r.ok||data.error) throw new Error(data.error||'Erreur serveur');
+    currentResult=data; renderResult(data);
+    resultBadge.textContent='COMPLÉTÉ'; exportBar.style.display='flex';
+    showToast('Analyse terminée avec succès.','success');
+  }catch(err){
+    resultBody.innerHTML=`<div class="error-box"><strong>ERREUR D'ANALYSE</strong><br/><br/>${escHtml(err.message)}<br/><br/><span style="color:var(--text-muted);">Vérifiez qu'Ollama est démarré et que le modèle est téléchargé.<br/>Commandes : <code>ollama serve</code> puis <code>ollama pull llama3</code></span></div>`;
+    resultBadge.textContent='ERREUR';
+    showToast('Erreur : '+err.message,'err-toast',5000);
+  }finally{
+    btnAnalyse.disabled=false; btnLabel.textContent='⬡ ANALYSER';
+    progressWrap.classList.remove('active');
+  }
+});
+
+function renderResult(d){
+  const p=d.perimetre||{},ef=d.exigences_fonctionnelles||[],ct=d.contraintes_techniques||{},kw=d.mots_cles_domaine||[],meta=d._meta||{};
+  const contraintes=[
+    {label:'Acoustique',key:'acoustique'},{label:'Fréquences',key:'frequences'},
+    {label:'Étanchéité / Pression',key:'etancheite_pression'},{label:'Débit / Latence',key:'debit_latence'},
+    {label:'Env. physique',key:'environnement_physique'}
+  ];
+  const autres=Array.isArray(ct.autres)?ct.autres:[];
+  resultBody.innerHTML=`
+    <div class="result-section">
+      <div class="section-title">Périmètre</div>
+      <div style="margin-bottom:8px;"><div class="sub-card-label">Système sous analyse</div>
+        <span class="tag" style="font-size:13px;padding:4px 12px;">${escHtml(p.systeme_sous_analyse||'Non spécifié')}</span>
+      </div>
+      <div class="perimetre-grid">
+        <div class="sub-card"><div class="sub-card-label">Acteurs externes</div><div class="tag-list">
+          ${(p.acteurs_externes||[]).map(a=>`<span class="tag">${escHtml(a)}</span>`).join('')||'<span style="color:var(--text-muted);font-size:11px;">Aucun</span>'}
+        </div></div>
+        <div class="sub-card"><div class="sub-card-label">Milieux externes</div><div class="tag-list">
+          ${(p.milieux_externes||[]).map(m=>`<span class="tag green">${escHtml(m)}</span>`).join('')||'<span style="color:var(--text-muted);font-size:11px;">Aucun</span>'}
+        </div></div>
+      </div>
+    </div>
+    <div class="result-section">
+      <div class="section-title">Besoin Fondamental</div>
+      <div class="besoin-text">${escHtml(d.besoin_fondamental||'Non spécifié')}</div>
+    </div>
+    <div class="result-section">
+      <div class="section-title">Exigences Fonctionnelles (${ef.length})</div>
+      <div class="exigences-list">
+        ${ef.map((e,i)=>`<div class="exigence-item"><span class="exigence-num">EF-${String(i+1).padStart(2,'0')}</span><span>${escHtml(e).replace(/^(Le syst[eè]me DOIT)/i,'<span class="exigence-must">$1</span>')}</span></div>`).join('')||'<div style="color:var(--text-muted)">Aucune exigence extraite.</div>'}
+      </div>
+    </div>
+    <div class="result-section">
+      <div class="section-title">Contraintes Techniques</div>
+      <div class="contraintes-grid">
+        ${contraintes.map(c=>{const v=ct[c.key]||'Non spécifié',na=v==='N/A'||v==='Non spécifié';return`<div class="contrainte-card"><div class="contrainte-label">${c.label}</div><div class="contrainte-val${na?' na':''}">${escHtml(v)}</div></div>`;}).join('')}
+        ${autres.length?`<div class="contrainte-card" style="grid-column:1/-1;"><div class="contrainte-label">Autres contraintes</div><div class="tag-list" style="margin-top:4px;">${autres.map(a=>`<span class="tag orange">${escHtml(a)}</span>`).join('')}</div></div>`:''}
+      </div>
+    </div>
+    ${kw.length?`<div class="result-section"><div class="section-title">Mots-clés Domaine</div><div class="keywords-wrap">${kw.map(k=>`<span class="tag orange">${escHtml(k)}</span>`).join('')}</div></div>`:''}
+    <div style="margin-top:16px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);letter-spacing:1px;">
+      Modèle : ${escHtml(meta.model||'?')} &nbsp;|&nbsp; ${meta.timestamp?new Date(meta.timestamp).toLocaleString('fr-FR'):''}
+    </div>`;
+}
+
+document.getElementById('btn-export-json').addEventListener('click',async()=>{
+  if(!currentResult)return;
+  try{
+    const r=await fetch('/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({result:currentResult})});
+    const d=await r.json();
+    if(d.filename) showToast('✓ Exporté : exports/'+d.filename,'success',4000);
+    else throw new Error(d.error||'Erreur');
+  }catch(e){ showToast('Erreur export : '+e.message,'err-toast',4000); }
+});
+
+document.getElementById('btn-copy-json').addEventListener('click',()=>{
+  if(!currentResult)return;
+  navigator.clipboard.writeText(JSON.stringify(currentResult,null,2))
+    .then(()=>showToast('JSON copié dans le presse-papiers.','success'))
+    .catch(()=>showToast('Impossible de copier.','err-toast'));
+});
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let toastTimeout;
+function showToast(msg,type='',duration=3000){
+  toast.textContent=msg; toast.className='show '+type;
+  clearTimeout(toastTimeout); toastTimeout=setTimeout(()=>{toast.className=''},duration);
+}
+</script>
+</body>
+</html>
