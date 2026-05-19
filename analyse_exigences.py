@@ -85,42 +85,42 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 # ---------------------------------------------------------------------------
 # Prompt système ultra-directif — domaine naval/sous-marin
 # ---------------------------------------------------------------------------
-SYSTEM_PROMPT = """Tu es un Ingénieur Système expert en télécommunications et systèmes sous-marins \
-(sonar, VLF/ELF, acoustique sous-marine, étanchéité, systèmes embarqués navals).
-Tu reçois une demande client brute. Tu dois l'analyser rigoureusement et extraire les éléments \
-d'ingénierie système suivants.
+SYSTEM_PROMPT = """You are a JSON API. You only output valid JSON. No explanations, no markdown, no text before or after the JSON object.
 
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans markdown, sans commentaires, sans texte avant ou après.
+You are also an expert Systems Engineer specializing in naval/submarine telecommunications (sonar, VLF/ELF, underwater acoustics, watertight systems).
 
-Le JSON doit respecter EXACTEMENT ce schéma :
+Analyze the client request and fill this exact JSON structure. Replace ALL placeholder values. Never output null. Use "Non specifie" if information is missing.
+
+OUTPUT ONLY THIS JSON OBJECT:
 {
   "perimetre": {
-    "systeme_sous_analyse": "<nom court du système principal>",
-    "acteurs_externes": ["<acteur1>", "<acteur2>"],
-    "milieux_externes": ["<milieu1>", "<milieu2>"]
+    "systeme_sous_analyse": "short system name here",
+    "acteurs_externes": ["actor1", "actor2"],
+    "milieux_externes": ["environment1", "environment2"]
   },
-  "besoin_fondamental": "<phrase unique décrivant la mission principale du système>",
+  "besoin_fondamental": "single sentence describing the main mission",
   "exigences_fonctionnelles": [
-    "Le système DOIT <verbe d'action> <objet> <condition optionnelle>."
+    "Le systeme DOIT perform action on object under condition.",
+    "Le systeme DOIT perform second action.",
+    "Le systeme DOIT perform third action.",
+    "Le systeme DOIT perform fourth action."
   ],
   "contraintes_techniques": {
-    "acoustique": "<contraintes acoustiques ou N/A>",
-    "frequences": "<bandes de fréquences : VLF, ELF, SHF, etc. ou N/A>",
-    "etancheite_pression": "<spécifications d'étanchéité/pression ou N/A>",
-    "debit_latence": "<contraintes de débit et latence ou N/A>",
-    "environnement_physique": "<température, corrosion, vibrations, etc. ou N/A>",
-    "autres": ["<contrainte supplémentaire>"]
+    "acoustique": "acoustic constraints or Non specifie",
+    "frequences": "frequency bands VLF/ELF/etc or Non specifie",
+    "etancheite_pression": "waterproofing and pressure specs or Non specifie",
+    "debit_latence": "throughput and latency constraints or Non specifie",
+    "environnement_physique": "temperature corrosion vibration or Non specifie",
+    "autres": ["additional constraint if any"]
   },
-  "mots_cles_domaine": ["<mot-clé1>", "<mot-clé2>"]
+  "mots_cles_domaine": ["keyword1", "keyword2", "keyword3"]
 }
 
-RÈGLES IMPÉRATIVES :
-- Les exigences fonctionnelles commencent TOUJOURS par "Le système DOIT"
-- Sois précis et technique. Utilise le vocabulaire du domaine (OTAN, MIL-STD, etc.) si pertinent.
-- Si une information est absente dans la demande, mets "Non spécifié" (jamais null ni vide).
-- Génère entre 4 et 10 exigences fonctionnelles selon la complexité.
-- Milieux externes possibles : eau de mer, atmosphère, fond marin, navire de surface, satellite, etc.
-- Acteurs externes possibles : opérateur, équipage, PC de commandement, systèmes tiers, etc.
+RULES:
+- exigences_fonctionnelles items MUST start with "Le systeme DOIT"
+- Generate 4 to 8 items in exigences_fonctionnelles
+- All strings must be in French
+- Output ONLY the JSON object, starting with { and ending with }
 """
 
 # ---------------------------------------------------------------------------
@@ -153,34 +153,33 @@ def analyse():
     if not demande:
         return jsonify({"error": "Demande vide."}), 400
 
-    # Construction du message utilisateur injecté dans le prompt
+    # Construction du message utilisateur
     user_message = (
-        "Voici la demande client à analyser :\n\n"
-        "---\n"
-        f"{demande}\n"
-        "---\n\n"
-        "Extrais toutes les informations selon le schéma JSON demandé."
+        f"Client request to analyze:\n\n{demande}\n\n"
+        "Output the JSON object now:"
     )
 
     try:
         # ------------------------------------------------------------------
-        # Appel à Ollama via la bibliothèque officielle Python
+        # Appel à Ollama — prefill "{" force le modèle à démarrer en JSON pur
         # ------------------------------------------------------------------
         response = ollama.chat(
             model=model,
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": user_message},
+                {"role": "system",    "content": SYSTEM_PROMPT},
+                {"role": "user",      "content": user_message},
+                {"role": "assistant", "content": "{"},  # prefill : force JSON dès le 1er token
             ],
             options={
-                "temperature": 0.1,   # Faible température → réponses déterministes
+                "temperature": 0.1,
                 "top_p": 0.9,
-                "num_predict": 4096,  # Augmenté pour éviter la troncature du JSON
-                "num_ctx": 8192,      # Fenêtre de contexte élargie
+                "num_predict": 4096,
+                "num_ctx": 8192,
             }
         )
 
-        raw_text = response["message"]["content"]
+        # Le modèle continue après "{" — on le réinjecte en tête
+        raw_text = "{" + response["message"]["content"]
 
         # Parsing robuste multi-stratégies (voir parse_json_robust)
         result = parse_json_robust(raw_text)
