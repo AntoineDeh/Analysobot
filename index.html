@@ -136,6 +136,30 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .btn-copy-row{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;flex-shrink:0;padding:0 2px;line-height:1.4;border-radius:2px;transition:color .15s}
 .btn-copy-row:hover{color:var(--accent2)}
 
+/* BADGES ORIGINE */
+.badge-origine{font-size:9px;padding:1px 6px;border-radius:2px;font-weight:bold;letter-spacing:1px;flex-shrink:0;margin-top:2px;cursor:default;text-transform:uppercase}
+.badge-E{background:rgba(0,255,157,.1);color:var(--accent2);border:1px solid rgba(0,255,157,.3)}
+.badge-D{background:rgba(255,204,0,.1);color:#d4a017;border:1px solid rgba(255,204,0,.3)}
+.badge-H{background:rgba(255,107,53,.1);color:var(--accent3);border:1px solid rgba(255,107,53,.3)}
+
+/* JUSTIFICATION */
+.req-justif{font-size:10px;font-style:italic;line-height:1.5;margin-top:3px;padding:3px 8px 3px 10px;border-radius:0 2px 2px 0;letter-spacing:.3px}
+.req-justif.justif-E{color:var(--accent2);border-left:2px solid rgba(0,255,157,.3);background:rgba(0,255,157,.03)}
+.req-justif.justif-D{color:#c9a227;border-left:2px solid rgba(255,204,0,.3);background:rgba(255,204,0,.03)}
+.req-justif.justif-H{color:var(--accent3);border-left:2px solid rgba(255,107,53,.3);background:rgba(255,107,53,.03)}
+
+/* STATUT BADGE */
+.statut-select.s-confirmer{color:var(--text-muted)}
+.statut-select.s-confirme{color:var(--accent2);border-color:rgba(0,255,157,.35)}
+.statut-select.s-rejete{color:var(--error);border-color:rgba(255,61,90,.35)}
+.statut-select.s-revision{color:var(--warning);border-color:rgba(255,204,0,.35)}
+
+/* HISTORY DELETE */
+.history-del{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;flex-shrink:0;padding:0 3px;transition:color .15s;line-height:1}
+.history-del:hover{color:var(--error)}
+.history-clear{width:100%;margin-top:4px;padding:4px;background:transparent;border:1px dashed rgba(255,61,90,.3);color:rgba(255,61,90,.5);font-family:var(--font-mono);font-size:9px;letter-spacing:1px;border-radius:var(--radius);cursor:pointer;transition:all .2s}
+.history-clear:hover{border-color:var(--error);color:var(--error)}
+
 /* RÉSULTATS ÉDITABLES */
 .result-section{margin-bottom:18px}
 .section-title{font-family:var(--font-ui);font-weight:600;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
@@ -210,10 +234,21 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .edit-mode-bar{display:flex;align-items:center;gap:8px;padding:7px 16px;background:rgba(0,212,255,.05);border-top:1px solid var(--border);font-size:10px;color:var(--text-dim);letter-spacing:1px}
 .edit-indicator{width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 6px var(--accent2);animation:blink 1.5s ease-in-out infinite;flex-shrink:0}
 
+/* Prefix input */
+.prefix-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted);letter-spacing:1px}
+.prefix-input{background:var(--bg);border:1px solid var(--border);color:var(--accent);font-family:var(--font-mono);font-size:11px;padding:2px 6px;border-radius:2px;width:70px;outline:none;text-transform:uppercase;letter-spacing:1px}
+.prefix-input:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
+
 /* Export bar */
 .export-bar{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius)}
 .btn-export{padding:8px 6px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:all .2s;text-align:center;width:100%}
 .btn-export:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(0,255,157,.05)}
+.btn-affiner{border-color:rgba(0,212,255,.4);color:var(--accent);grid-column:1/-1}
+.btn-affiner:hover{border-color:var(--accent);background:rgba(0,212,255,.07);color:var(--accent)}
+.btn-doors{border-color:#6b46c1;color:#b794f4}
+.btn-doors:hover{border-color:#b794f4;color:#b794f4;background:rgba(183,148,244,.1)}
+.btn-reqif{border-color:#744210;color:#f6ad55}
+.btn-reqif:hover{border-color:#f6ad55;color:#f6ad55;background:rgba(246,173,85,.1)}
 .btn-word{border-color:#2b6cb0;color:#63b3ed}
 .btn-word:hover{border-color:#63b3ed;color:#63b3ed;background:rgba(99,179,237,.12)}
 .btn-excel{border-color:#276748;color:#68d391}
@@ -278,10 +313,10 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
       <div class="quick-examples">
         <div class="quick-label">Exemples rapides :</div>
         <div class="examples-grid">
-          <button class="example-chip" data-example="sonar">Sonar passif</button>
-          <button class="example-chip" data-example="vlf">Antenne VLF</button>
-          <button class="example-chip" data-example="comms">Liaison données</button>
-          <button class="example-chip" data-example="torpedo">Torpille légère</button>
+          <button class="example-chip" data-example="vlf">Réception VLF/ELF</button>
+          <button class="example-chip" data-example="acoustique">Com. acoustique</button>
+          <button class="example-chip" data-example="interne">Réseau interne</button>
+          <button class="example-chip" data-example="satcom">SATCOM périscopique</button>
         </div>
       </div>
 
@@ -310,6 +345,7 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
       <div class="history-section" id="history-section" style="display:none;">
         <div class="history-label">Analyses récentes</div>
         <div class="history-list" id="history-list"></div>
+        <button class="history-clear" id="btn-clear-history">✕ Vider l'historique</button>
       </div>
     </div>
   </div>
@@ -318,6 +354,10 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
   <div class="panel" id="result-panel">
     <div class="panel-header">
       <span class="panel-title">Exigences Extraites</span>
+      <div class="prefix-wrap" id="prefix-wrap" style="display:none;">
+        <span>PRÉFIXE</span>
+        <input class="prefix-input" id="prefix-input" value="EF" maxlength="10" title="Préfixe de numérotation (ex: SONAR, SYS, VLF)"/>
+      </div>
       <span class="panel-badge" id="result-badge">EN ATTENTE</span>
     </div>
     <div class="stats-bar" id="stats-bar" style="display:none;"></div>
@@ -337,6 +377,9 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
       <button class="btn-export btn-word" id="btn-export-word">📄 Word</button>
       <button class="btn-export btn-excel" id="btn-export-excel">📊 Excel</button>
       <button class="btn-export" id="btn-copy-json">◻ Copier</button>
+      <button class="btn-export btn-doors" id="btn-export-doors">⬇ DOORS CSV</button>
+      <button class="btn-export btn-reqif" id="btn-export-reqif">⬇ ReqIF</button>
+      <button class="btn-export btn-affiner" id="btn-affiner">⚙ AFFINER LES EXIGENCES (ISO 29148)</button>
     </div>
   </div>
 
@@ -353,10 +396,10 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
    EXEMPLES
 ========================================================================= */
 const EXAMPLES = {
-  sonar:`Nous avons besoin d'un sonar passif basse fréquence embarqué sur sous-marin de classe Rubis. Le système doit détecter des contacts à une distance minimale de 25 km dans un environnement à fort bruit de fond (trafic maritime dense). La profondeur maximale d'opération est de 300 mètres, avec une pression hydrostatique de 30 bar. L'interférence de la propulsion nucléaire doit être minimisée. Autonomie de traitement : temps réel, latence < 200 ms.`,
-  vlf:`Besoin d'une antenne VLF/ELF tractée pour sous-marin en immersion. Elle doit permettre la réception de messages de commandement OTAN en bande VLF (3–30 kHz) et ELF (3–300 Hz) depuis des stations terrestres (ex : Rosnay). Longueur maximale de l'antenne tractée : 2 km. Vitesse de navigation maximale pendant déploiement : 8 nœuds. Profondeur de traction : jusqu'à 150 m.`,
-  comms:`Système de liaison de données acoustique bidirectionnel entre un sous-marin et un AUV. Portée requise : 5 km. Profondeur max : 600 m (pression : 60 bar). Débit minimal : 500 bps. Le système doit être étanche IP68, résistant à la corrosion marine (eau de mer à 3,5% NaCl), et opérationnel de 0°C à 30°C. Contrainte poids : < 15 kg.`,
-  torpedo:`Torpille légère anti-sous-marine pour frégates de la Marine nationale. Masse maximale : 350 kg. Vitesse minimale : 40 nœuds. Profondeur maximale : 500 m. Guidage : acoustique actif/passif + fil. Tête militaire : 90 kg d'explosif. Interface navire : MIL-STD-1553B. Résistance à la pression : 50 bar.`
+  vlf:`Système de réception VLF/ELF pour sous-marin de classe Suffren en immersion profonde. Le système doit recevoir les messages de commandement OTAN depuis la station terrestre de Rosnay (France) en bande VLF (3–30 kHz) et ELF (30–300 Hz) sans déploiement d'antenne jusqu'à 200 mètres de profondeur. Sensibilité minimale du récepteur : -120 dBm. Latence de décodage maximale : 5 secondes. Compatibilité MIL-STD-188-110C et STANAG 4204 obligatoire. Chiffrement OTAN SDIP-27 niveau B. Étanchéité IP68 à 30 bar.`,
+  acoustique:`Système de communication acoustique bidirectionnel entre un sous-marin de classe Barracuda et une flottille d'AUVs en mission de reconnaissance. Portée minimale : 8 km en eau profonde (fond > 500 m). Débit minimal : 1 200 bps en duplex. Fréquence porteuse : bande LF 1–10 kHz. Résistance aux interférences biologiques (mammifères marins, crevettes stridulantes). Profondeur d'opération : jusqu'à 450 m (pression : 45 bar). Étanchéité IP68. Masse maximale du transducteur : 12 kg. Interface MIL-STD-1553B vers système de combat.`,
+  interne:`Réseau de communication interne pour sous-marin nucléaire d'attaque de nouvelle génération. Interconnexion de 20 postes de combat avec une dorsale à 10 Gbps redondante. Latence maximale inter-nœuds : 2 ms. Basculement automatique en cas de défaillance : inférieur à 100 ms. Immunité CEM selon MIL-STD-461G. Résistance aux chocs mécaniques MIL-S-901D Grade A. Température de fonctionnement : -10°C à +55°C. Protocole chiffré AES-256. Compatibilité STANAG 3910.`,
+  satcom:`Système de communication SATCOM pour sous-marin en navigation à immersion périscopique (profondeur antenne : 0 à 15 m). Liaison montante/descendante en bande SHF (7–8 GHz) et EHF (44 GHz) via satellite OTAN SYRACUSE 4. Débit minimal : 8 Mbps en réception, 2 Mbps en émission. Temps d'établissement de liaison : inférieur à 30 secondes à vitesse de 8 nœuds. Chiffrement de bout en bout SDIP-27 niveau B. Conformité STANAG 4204 et STANAG 4206. Protection LPI/LPD. Antenne rétractable résistante à la corrosion marine (eau de mer 3,5% NaCl).`
 };
 
 /* =========================================================================
@@ -374,6 +417,10 @@ const VAGUE_WORDS = [
 const PRIORITY_OPTIONS = ['Must', 'Should', 'Could', "Won't"];
 const VERIF_OPTIONS    = ['Test', 'Analyse', 'Inspection', 'Démonstration'];
 const NFR_TYPES        = ['Performance', 'Fiabilité', 'Interface', 'Physique', 'Sécurité'];
+const STATUT_OPTIONS   = ['À confirmer', 'Confirmé', 'Rejeté', 'En révision'];
+const ORIGINE_BADGE    = { 'Explicite': 'E', 'Déduite': 'D', 'Hypothèse': 'H' };
+const ORIGINE_CSS      = { 'Explicite': 'badge-E', 'Déduite': 'badge-D', 'Hypothèse': 'badge-H' };
+const JUSTIF_CSS       = { 'Explicite': 'justif-E', 'Déduite': 'justif-D', 'Hypothèse': 'justif-H' };
 
 const NFR_CSS = {
   'Performance': 'nfr-perf',
@@ -404,6 +451,7 @@ const toast        = document.getElementById('toast');
 let currentResult   = null;
 let contextText     = '';
 let contextFileName = '';
+let efPrefix        = 'EF';
 
 /* =========================================================================
    UTILITAIRES
@@ -468,7 +516,7 @@ function makeInlineSelect(options, value, extraClass, onChange) {
    HISTORIQUE DE SESSION
 ========================================================================= */
 let sessionHistory = [];
-try { sessionHistory = JSON.parse(sessionStorage.getItem('syreq_history') || '[]'); } catch(e) {}
+try { sessionHistory = JSON.parse(localStorage.getItem('syreq_history') || '[]'); } catch(e) {}
 
 function saveToHistory(result) {
   const entry = {
@@ -477,8 +525,20 @@ function saveToHistory(result) {
     model:   result._meta && result._meta.model ? result._meta.model : '?',
     data:    JSON.parse(JSON.stringify(result))
   };
-  sessionHistory = [entry, ...sessionHistory].slice(0, 5);
-  try { sessionStorage.setItem('syreq_history', JSON.stringify(sessionHistory)); } catch(e) {}
+  sessionHistory = [entry, ...sessionHistory].slice(0, 20);
+  try { localStorage.setItem('syreq_history', JSON.stringify(sessionHistory)); } catch(e) {}
+  renderHistory();
+}
+
+function deleteHistoryItem(idx) {
+  sessionHistory.splice(idx, 1);
+  try { localStorage.setItem('syreq_history', JSON.stringify(sessionHistory)); } catch(e) {}
+  renderHistory();
+}
+
+function clearHistory() {
+  sessionHistory = [];
+  try { localStorage.removeItem('syreq_history'); } catch(e) {}
   renderHistory();
 }
 
@@ -488,11 +548,15 @@ function renderHistory() {
   if (!sessionHistory.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   list.innerHTML = '';
-  sessionHistory.forEach(entry => {
+  sessionHistory.forEach((entry, idx) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:4px;';
+
     const btn = document.createElement('button');
     btn.className = 'history-item';
+    btn.style.flex = '1';
     let tsStr = '';
-    try { tsStr = new Date(entry.ts).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}); } catch(e) {}
+    try { tsStr = new Date(entry.ts).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); } catch(e) {}
     btn.innerHTML =
       '<span>' + escHtml(entry.systeme) + '</span>' +
       '<span class="history-ts">' + tsStr + ' · ' + escHtml(String(entry.model).replace(/:latest$/i,'')) + '</span>';
@@ -503,10 +567,21 @@ function renderHistory() {
       exportBar.style.display   = 'grid';
       editModeBar.style.display = 'flex';
       statsBar.style.display    = 'flex';
+      document.getElementById('prefix-wrap').style.display = 'flex';
     });
-    list.appendChild(btn);
+
+    const del = document.createElement('button');
+    del.className = 'history-del'; del.textContent = '×'; del.title = 'Supprimer';
+    del.addEventListener('click', e => { e.stopPropagation(); deleteHistoryItem(idx); });
+
+    row.appendChild(btn); row.appendChild(del);
+    list.appendChild(row);
   });
 }
+
+document.getElementById('btn-clear-history').addEventListener('click', () => {
+  if (confirm('Vider tout l\'historique des analyses ?')) clearHistory();
+});
 
 /* =========================================================================
    STATUT OLLAMA
@@ -571,25 +646,26 @@ btnAnalyse.addEventListener('click', async () => {
     </div>`;
 
   try {
-    const r = await fetch('/analyse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ demande, model: modelSelect.value, context: contextText, context_filename: contextFileName })
+    await readSSEStream('/analyse', {
+      demande,
+      model:            modelSelect.value,
+      context:          contextText,
+      context_filename: contextFileName
+    }, (data) => {
+      data._meta = data._meta || {};
+      data._meta.demande_full = demande;
+      currentResult = data;
+      renderResult(data);
+      saveToHistory(data);
+      resultBadge.textContent   = 'COMPLÉTÉ — ÉDITABLE';
+      exportBar.style.display   = 'grid';
+      editModeBar.style.display = 'flex';
+      statsBar.style.display    = 'flex';
+      document.getElementById('prefix-wrap').style.display = 'flex';
+    }, (tokenCount) => {
+      const el = resultBody.querySelector('.placeholder-text');
+      if (el) el.textContent = `Génération en cours… ${tokenCount} tokens`;
     });
-    const data = await r.json();
-    if (!r.ok || data.error) throw new Error(data.error || 'Erreur serveur');
-
-    data._meta = data._meta || {};
-    data._meta.demande_full = demande;
-
-    currentResult = data;
-    renderResult(data);
-    saveToHistory(data);
-    resultBadge.textContent   = 'COMPLÉTÉ — ÉDITABLE';
-    exportBar.style.display   = 'grid';
-    editModeBar.style.display = 'flex';
-    statsBar.style.display    = 'flex';
-
   } catch (err) {
     resultBody.innerHTML = `
       <div class="error-box">
@@ -612,15 +688,15 @@ btnAnalyse.addEventListener('click', async () => {
 ========================================================================= */
 function renderResult(d) {
   const p   = d.perimetre || {};
-  const ef  = (d.exigences_fonctionnelles || []).map(e =>
-    typeof e === 'string'
-      ? { id: genId('EF'), text: e, priority: 'Must', verification: 'Test' }
-      : Object.assign({ id: genId('EF'), priority: 'Must', verification: 'Test' }, e)
-  );
+  const ef  = (d.exigences_fonctionnelles || []).map(e => {
+    if (typeof e === 'string') return { id: genId('EF'), text: e, origine: 'Explicite', justification: '', priority: 'Must', verification: 'Test', statut: 'À confirmer' };
+    const text = e.text || e.texte || '';
+    return Object.assign({ id: genId('EF'), origine: 'Explicite', justification: '', priority: 'Must', verification: 'Test', statut: 'À confirmer' }, e, { text });
+  });
   const nfr = (d.exigences_non_fonctionnelles || []).map(e => {
-    if (typeof e === 'string') return { id: genId('ENF'), text: e, type: 'Performance', priority: 'Must', verification: 'Test' };
-    if (e.texte) return { id: genId('ENF'), text: e.texte, type: e.type || 'Performance', priority: e.priority || 'Must', verification: e.verification || 'Test' };
-    return Object.assign({ id: genId('ENF'), type: 'Performance', priority: 'Must', verification: 'Test' }, e);
+    if (typeof e === 'string') return { id: genId('ENF'), text: e, type: 'Performance', origine: 'Explicite', justification: '', priority: 'Must', verification: 'Test', statut: 'À confirmer' };
+    const text = e.text || e.texte || '';
+    return Object.assign({ id: genId('ENF'), type: 'Performance', origine: 'Explicite', justification: '', priority: 'Must', verification: 'Test', statut: 'À confirmer' }, e, { text });
   });
   const ct   = d.contraintes_techniques || {};
   const kw   = d.mots_cles_domaine || [];
@@ -812,7 +888,42 @@ function renderResult(d) {
 
     rowBot.appendChild(lblP); rowBot.appendChild(selP);
     rowBot.appendChild(lblV); rowBot.appendChild(selV);
-    item.appendChild(rowTop); item.appendChild(rowBot);
+    /* Badge origine */
+    const orig = efObj.origine || 'Explicite';
+    num.title = orig;
+    const origBadge = document.createElement('span');
+    origBadge.className = 'badge-origine ' + (ORIGINE_CSS[orig] || 'badge-E');
+    origBadge.textContent = ORIGINE_BADGE[orig] || 'E';
+    origBadge.title = orig;
+
+    /* Statut select */
+    const lblStat = document.createElement('span'); lblStat.className = 'row-lbl row-lbl-gap'; lblStat.textContent = 'Statut :';
+    const selStat = document.createElement('select');
+    selStat.className = 'inline-select statut-select';
+    STATUT_OPTIONS.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = o;
+      if (o === (efObj.statut || 'À confirmer')) opt.selected = true;
+      selStat.appendChild(opt);
+    });
+    const applyStatutClass = s => {
+      selStat.classList.remove('s-confirmer','s-confirme','s-rejete','s-revision');
+      const m = {'À confirmer':'s-confirmer','Confirmé':'s-confirme','Rejeté':'s-rejete','En révision':'s-revision'};
+      if (m[s]) selStat.classList.add(m[s]);
+    };
+    applyStatutClass(efObj.statut || 'À confirmer');
+    selStat.addEventListener('change', () => { applyStatutClass(selStat.value); syncResult(); updateStats(); });
+    rowBot.appendChild(lblStat); rowBot.appendChild(selStat);
+
+    /* Justification */
+    const justifDiv = document.createElement('div');
+    const justif = efObj.justification || efObj.extrait_source || '';
+    justifDiv.className = 'req-justif ' + (JUSTIF_CSS[orig] || 'justif-E');
+    justifDiv.textContent = justif || '— Aucune justification fournie';
+    justifDiv.dataset.raw = justif;
+
+    rowTop.insertBefore(origBadge, num);
+    item.appendChild(rowTop); item.appendChild(rowBot); item.appendChild(justifDiv);
 
     /* drag & drop */
     item.addEventListener('dragstart', e => {
@@ -866,7 +977,7 @@ function renderResult(d) {
     const items = efList.querySelectorAll('.exigence-item');
     items.forEach((item, i) => {
       const n = item.querySelector('.exigence-num');
-      if (n) n.textContent = 'EF-' + String(i + 1).padStart(2, '0');
+      if (n) n.textContent = `${efPrefix}-${String(i + 1).padStart(2, '0')}`;
     });
     const t = document.getElementById('ef-title');
     if (t) t.textContent = 'Exigences Fonctionnelles (' + items.length + ')';
@@ -960,7 +1071,42 @@ function renderResult(d) {
     rowBot.appendChild(lblP); rowBot.appendChild(selP);
     rowBot.appendChild(lblV); rowBot.appendChild(selV);
 
-    item.appendChild(rowTop); item.appendChild(rowBot);
+    /* Badge origine NFR */
+    const origNFR = nfrObj.origine || 'Explicite';
+    typeBadge.title = origNFR;
+    const origBadgeNFR = document.createElement('span');
+    origBadgeNFR.className = 'badge-origine ' + (ORIGINE_CSS[origNFR] || 'badge-E');
+    origBadgeNFR.textContent = ORIGINE_BADGE[origNFR] || 'E';
+    origBadgeNFR.title = origNFR;
+    rowTop.insertBefore(origBadgeNFR, typeBadge);
+
+    /* Statut NFR */
+    const lblStatNFR = document.createElement('span'); lblStatNFR.className = 'row-lbl row-lbl-gap'; lblStatNFR.textContent = 'Statut :';
+    const selStatNFR = document.createElement('select');
+    selStatNFR.className = 'inline-select statut-select';
+    STATUT_OPTIONS.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = o;
+      if (o === (nfrObj.statut || 'À confirmer')) opt.selected = true;
+      selStatNFR.appendChild(opt);
+    });
+    const applyStatNFR = s => {
+      selStatNFR.classList.remove('s-confirmer','s-confirme','s-rejete','s-revision');
+      const m = {'À confirmer':'s-confirmer','Confirmé':'s-confirme','Rejeté':'s-rejete','En révision':'s-revision'};
+      if (m[s]) selStatNFR.classList.add(m[s]);
+    };
+    applyStatNFR(nfrObj.statut || 'À confirmer');
+    selStatNFR.addEventListener('change', () => { applyStatNFR(selStatNFR.value); syncResult(); updateStats(); });
+    rowBot.appendChild(lblStatNFR); rowBot.appendChild(selStatNFR);
+
+    /* Justification NFR */
+    const justifNFR = document.createElement('div');
+    const justifTxtNFR = nfrObj.justification || nfrObj.extrait_source || '';
+    justifNFR.className = 'req-justif ' + (JUSTIF_CSS[origNFR] || 'justif-E');
+    justifNFR.textContent = justifTxtNFR || '— Aucune justification fournie';
+    justifNFR.dataset.raw = justifTxtNFR;
+
+    item.appendChild(rowTop); item.appendChild(rowBot); item.appendChild(justifNFR);
     return item;
   }
 
@@ -1052,13 +1198,22 @@ function updateStats() {
   all.forEach(e => { const p = e.priority || 'Must'; if (p in cnt) cnt[p]++; });
   const vague = all.filter(e => hasVagueWord(e.text || '')).length;
 
+  const origCnt = { Explicite: 0, Déduite: 0, Hypothèse: 0 };
+  all.forEach(e => { const o = e.origine || 'Explicite'; if (o in origCnt) origCnt[o]++; });
+  const statutCnt = { 'À confirmer': 0, 'Confirmé': 0, 'Rejeté': 0, 'En révision': 0 };
+  all.forEach(e => { const s = e.statut || 'À confirmer'; if (s in statutCnt) statutCnt[s]++; });
+
   statsBar.innerHTML =
-    '<span class="stat-item">EF : <span class="stat-val">' + ef.length + '</span></span>' +
-    '<span class="stat-item">ENF : <span class="stat-val">' + nfr.length + '</span></span>' +
+    '<span class="stat-item">Total : <span class="stat-val">' + all.length + '</span></span>' +
+    '<span class="stat-item" title="Explicite" style="color:var(--accent2)">E : <b>' + origCnt['Explicite'] + '</b></span>' +
+    '<span class="stat-item" title="Déduite" style="color:#d4a017">D : <b>' + origCnt['Déduite'] + '</b></span>' +
+    '<span class="stat-item" title="Hypothèse" style="color:var(--accent3)">H : <b>' + origCnt['Hypothèse'] + '</b></span>' +
+    ' · ' +
     '<span class="stat-item">Must : <span class="stat-val stat-must">' + cnt['Must'] + '</span></span>' +
     '<span class="stat-item">Should : <span class="stat-val stat-should">' + cnt['Should'] + '</span></span>' +
-    '<span class="stat-item">Could : <span class="stat-val stat-could">' + cnt['Could'] + '</span></span>' +
-    (cnt["Won't"] ? '<span class="stat-item">Won\'t : <span class="stat-val stat-wont">' + cnt["Won't"] + '</span></span>' : '') +
+    (statutCnt['À confirmer'] ? '<span class="stat-item" style="color:var(--text-muted)">⏳ ' + statutCnt['À confirmer'] + ' à confirmer</span>' : '') +
+    (statutCnt['Confirmé']    ? '<span class="stat-item stat-could">✓ ' + statutCnt['Confirmé'] + ' confirmé' + (statutCnt['Confirmé']>1?'s':'') + '</span>' : '') +
+    (statutCnt['Rejeté']      ? '<span class="stat-item stat-must">✗ ' + statutCnt['Rejeté'] + ' rejeté' + (statutCnt['Rejeté']>1?'s':'') + '</span>' : '') +
     (vague ? '<span class="stat-item stat-warn">⚠ ' + vague + ' non-vérifiable' + (vague > 1 ? 's' : '') + '</span>' : '');
 }
 
@@ -1083,16 +1238,22 @@ function syncResult() {
   currentResult.exigences_fonctionnelles = [...resultBody.querySelectorAll('#ef-list .exigence-item')].map(item => ({
     id:           item.dataset.efId,
     text:         (item.querySelector('.exigence-text') ? item.querySelector('.exigence-text').textContent : '').trim(),
+    origine:      (item.querySelector('.badge-origine') ? item.querySelector('.badge-origine').title : 'Explicite'),
+    justification:(item.querySelector('.req-justif') ? item.querySelector('.req-justif').dataset.raw || '' : ''),
     priority:     item.querySelector('.priority-select') ? item.querySelector('.priority-select').value : 'Must',
     verification: item.querySelector('.verif-select') ? item.querySelector('.verif-select').value : 'Test',
+    statut:       item.querySelector('.statut-select') ? item.querySelector('.statut-select').value : 'À confirmer',
   })).filter(e => e.text);
 
   currentResult.exigences_non_fonctionnelles = [...resultBody.querySelectorAll('#nfr-list .nfr-item')].map(item => ({
     id:           item.dataset.nfrId,
     text:         (item.querySelector('.exigence-text') ? item.querySelector('.exigence-text').textContent : '').trim(),
     type:         item.querySelector('.nfr-type-select') ? item.querySelector('.nfr-type-select').value : 'Performance',
+    origine:      (item.querySelector('.badge-origine') ? item.querySelector('.badge-origine').title : 'Explicite'),
+    justification:(item.querySelector('.req-justif') ? item.querySelector('.req-justif').dataset.raw || '' : ''),
     priority:     item.querySelector('.priority-select') ? item.querySelector('.priority-select').value : 'Must',
     verification: item.querySelector('.verif-select') ? item.querySelector('.verif-select').value : 'Test',
+    statut:       item.querySelector('.statut-select') ? item.querySelector('.statut-select').value : 'À confirmer',
   })).filter(e => e.text);
 
   resultBody.querySelectorAll('.contrainte-val[data-ct-key]').forEach(el => {
@@ -1105,6 +1266,84 @@ function syncResult() {
   const kwWrap = document.getElementById('kw-wrap');
   if (kwWrap) currentResult.mots_cles_domaine =
     [...kwWrap.querySelectorAll('.tag span[contenteditable]')].map(s => s.textContent.trim()).filter(Boolean);
+}
+
+/* =========================================================================
+   SSE STREAM HELPER
+========================================================================= */
+async function readSSEStream(url, body, onResult, onChunk) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Erreur serveur'); }
+  const reader  = r.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop() || '';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const raw = line.slice(6).trim();
+      if (raw === '[DONE]') continue;
+      const msg = JSON.parse(raw);
+      if (msg.type === 'chunk' && onChunk) onChunk(msg.len);
+      else if (msg.type === 'result') onResult(msg.data);
+      else if (msg.type === 'error') throw new Error(msg.message);
+    }
+  }
+}
+
+/* =========================================================================
+   AFFINER
+========================================================================= */
+document.getElementById('btn-affiner').addEventListener('click', async () => {
+  if (!currentResult) return;
+  syncResult();
+  const btn = document.getElementById('btn-affiner');
+  btn.disabled = true; btn.textContent = '⟳ AFFINEMENT EN COURS…';
+  resultBadge.textContent = 'AFFINEMENT…';
+  try {
+    await readSSEStream('/affiner',
+      { result: currentResult, model: modelSelect.value },
+      (data) => {
+        currentResult = data;
+        renderResult(data);
+        resultBadge.textContent = 'AFFINÉ — ÉDITABLE';
+        showToast('✓ Exigences affinées (ISO 29148).', 'success', 4000);
+      },
+      (tokenCount) => { btn.textContent = `⟳ AFFINEMENT… ${tokenCount} t`; }
+    );
+  } catch (err) {
+    showToast('Erreur affinement : ' + err.message, 'err-toast', 4000);
+    resultBadge.textContent = 'ERREUR';
+  } finally {
+    btn.disabled = false; btn.textContent = '⚙ AFFINER LES EXIGENCES (ISO 29148)';
+  }
+});
+
+/* =========================================================================
+   PRÉFIXE PERSONNALISABLE
+========================================================================= */
+document.getElementById('prefix-input').addEventListener('input', function () {
+  efPrefix = this.value.toUpperCase().trim() || 'EF';
+  this.value = efPrefix;
+  renumberAllEF();
+});
+
+function renumberAllEF() {
+  const items = document.querySelectorAll('#ef-list .exigence-item');
+  items.forEach((item, i) => {
+    const n = item.querySelector('.exigence-num');
+    if (n) n.textContent = `${efPrefix}-${String(i + 1).padStart(2, '0')}`;
+  });
+  const t = document.getElementById('ef-title');
+  if (t) t.textContent = `Exigences Fonctionnelles (${items.length})`;
 }
 
 /* =========================================================================
@@ -1151,6 +1390,14 @@ document.getElementById('btn-export-word').addEventListener('click', () => {
 
 document.getElementById('btn-export-excel').addEventListener('click', () => {
   exportViaPost('/export/excel', 'exigences_' + makeTimestamp() + '.xlsx');
+});
+
+document.getElementById('btn-export-doors').addEventListener('click', () => {
+  exportViaPost('/export/doors-csv', 'exigences_' + makeTimestamp() + '_doors.csv');
+});
+
+document.getElementById('btn-export-reqif').addEventListener('click', () => {
+  exportViaPost('/export/reqif', 'exigences_' + makeTimestamp() + '.reqif');
 });
 
 document.getElementById('btn-copy-json').addEventListener('click', () => {

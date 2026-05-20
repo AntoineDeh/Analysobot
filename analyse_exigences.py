@@ -15,7 +15,7 @@ import json
 import re
 import datetime
 import ollama
-from flask import Flask, request, jsonify, send_from_directory, send_file
+from flask import Flask, request, jsonify, send_from_directory, send_file, Response, stream_with_context
 from pathlib import Path
 
 
@@ -38,6 +38,7 @@ from docx.oxml import OxmlElement
 from openpyxl import Workbook
 from openpyxl.styles import (Font, PatternFill, Alignment, Border, Side)
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 
 # json-repair (optionnel)
 try:
@@ -58,50 +59,114 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 # ---------------------------------------------------------------------------
 # Prompt système
 # ---------------------------------------------------------------------------
-SYSTEM_PROMPT = """You are a JSON API. You only output valid JSON. No explanations, no markdown, no text before or after the JSON object.
+SYSTEM_PROMPT = """Tu es une API JSON. Tu produis UNIQUEMENT du JSON valide, sans explication, sans markdown, aucun texte avant ou après l'objet JSON.
 
-You are also an expert Systems Engineer specializing in naval/submarine telecommunications (sonar, VLF/ELF, underwater acoustics, watertight systems).
+Tu es un Ingénieur Système Senior spécialisé dans les systèmes de communication des sous-marins militaires et navals :
+- Communications externes immergées : VLF/ELF (stations Rosnay/Cutler/Harold Holt), SATCOM périscopique (SHF/EHF/UHF), liaisons acoustiques sous-marines longue portée
+- Communications internes : réseaux de combat embarqués, bus militaires (MIL-STD-1553B, STANAG 3910), intercom, systèmes de commandement
+- Standards : STANAG 4204/4206, MIL-STD-188-110C, MIL-STD-461G, MIL-STD-810H, DEF STAN 02-713, SDIP-27, IEC 60945
+- Contraintes sous-marines : étanchéité (IP68, pression hydrostatique), EMI/EMC, chocs MIL-S-901D, corrosion marine
 
-Analyze the client request and fill this exact JSON structure. Replace ALL placeholder values. Never output null. Use "Non specifie" if information is missing.
+Tu appliques la norme ISO 29148:2018 pour la rédaction des exigences système.
 
-OUTPUT ONLY THIS JSON OBJECT:
+APPROCHE D'ANALYSE EN 3 NIVEAUX — FONDAMENTALE
+Les demandes client sont souvent incomplètes. Ne te limite jamais à extraire littéralement le texte.
+
+NIVEAU 1 — Explicite (origine: "Explicite")
+  Directement formulé dans le texte client ou le document de contexte.
+  justification = citation exacte entre guillemets «...»
+  Exemple: "débit minimal de 500 bps" → justification: "«débit minimal de 500 bps»"
+
+NIVEAU 2 — Déduite (origine: "Déduite")
+  Logiquement nécessaire compte tenu des contraintes explicites. Raisonnement d'ingénieur rigoureux.
+  N'invente PAS de valeur — déduis-la depuis une loi physique ou règle technique connue.
+  justification = raisonnement court (ex: "400 m de profondeur → 40 bar (1 bar ≈ 10 m eau)")
+  Exemples de déductions valides:
+    "profondeur 400 m" → "résistance à 40 bar minimum"
+    "système sous-marin" → "étanchéité IP68 minimale"
+    "eau de mer" → "résistance à la corrosion marine NaCl 3,5%"
+    "liaison bidirectionnelle temps réel" → "latence maximale à définir lors de la revue"
+
+NIVEAU 3 — Hypothèse (origine: "Hypothèse")
+  Raisonnable pour ce type de système naval/militaire, non mentionnée dans le texte.
+  Basée sur les standards et pratiques reconnus du domaine.
+  justification = "Hypothèse domaine : [raison]. A valider avec le client."
+  Exemples:
+    Système militaire → "Conformité CEM MIL-STD-461G probable"
+    Sous-marin OTAN → "Interface MIL-STD-1553B vers système de combat probable"
+    Communication chiffrée → "Conformité SDIP-27 niveau B probable"
+    Système naval → "Qualification vibration MIL-STD-810H probable"
+
+RÈGLE DE MIX : Génère minimum 2 Explicites + 2 Déduites + 2 Hypothèses.
+La valeur pour l'ingénieur est dans les niveaux 2 et 3 — ce que le client n'a pas pensé à écrire.
+
+RÈGLE ANTI-INVENTION : Pour les niveaux 2 et 3, n'invente jamais de valeur numérique non déductible. Utilise "à définir lors de la revue des exigences" si la valeur exacte est inconnue.
+
+STRUCTURE JSON EXACTE :
 {
   "perimetre": {
-    "systeme_sous_analyse": "short system name here",
-    "acteurs_externes": ["actor1", "actor2"],
-    "milieux_externes": ["environment1", "environment2"]
+    "systeme_sous_analyse": "nom court du système",
+    "acteurs_externes": ["Opérateur Radio", "Autorité de commandement OTAN"],
+    "milieux_externes": ["Milieu marin immergé", "Eau de mer 3,5% NaCl"]
   },
-  "besoin_fondamental": "single sentence describing the main mission",
+  "besoin_fondamental": "phrase unique décrivant la mission de communication avec contexte opérationnel",
   "exigences_fonctionnelles": [
-    "Le systeme DOIT perform action on object under condition.",
-    "Le systeme DOIT perform second action.",
-    "Le systeme DOIT perform third action.",
-    "Le systeme DOIT perform fourth action."
+    {
+      "texte": "Le système DOIT recevoir les messages OTAN en bande VLF (3-30 kHz) a une profondeur minimale de X metres.",
+      "origine": "Explicite",
+      "justification": "«citation exacte du texte source»",
+      "statut": "A confirmer"
+    },
+    {
+      "texte": "Le systeme DOIT resister a une pression hydrostatique minimale de 40 bar.",
+      "origine": "Déduite",
+      "justification": "Profondeur operationnelle de 400 m mentionnee → 1 bar ≈ 10 m d'eau → pression min = 40 bar.",
+      "statut": "A confirmer"
+    },
+    {
+      "texte": "Le systeme DOIT etre conforme au standard MIL-STD-461G pour la compatibilite electromagnetique.",
+      "origine": "Hypothèse",
+      "justification": "Hypothese domaine : systeme militaire embarque sur sous-marin → conformite CEM militaire standard. A valider avec le client.",
+      "statut": "A confirmer"
+    }
   ],
   "exigences_non_fonctionnelles": [
-    {"type": "Performance", "texte": "Le systeme DOIT atteindre une performance measurable."},
-    {"type": "Fiabilite", "texte": "Le systeme DOIT maintenir une disponibilite measurable."},
-    {"type": "Interface", "texte": "Le systeme DOIT etre compatible avec interface standard."},
-    {"type": "Physique", "texte": "Le systeme DOIT respecter une contrainte physique measurable."}
+    {
+      "type": "Performance",
+      "texte": "Le systeme DOIT atteindre une sensibilite minimale de X dBm.",
+      "origine": "Explicite",
+      "justification": "«citation exacte»",
+      "statut": "A confirmer"
+    },
+    {
+      "type": "Hypothèse",
+      "texte": "Le systeme DOIT presenter une MTBF minimale a definir lors de la revue des exigences.",
+      "origine": "Hypothèse",
+      "justification": "Hypothese domaine : systeme militaire critique → exigence de fiabilite standard naval. A valider avec le client.",
+      "statut": "A confirmer"
+    }
   ],
   "contraintes_techniques": {
-    "acoustique": "acoustic constraints or Non specifie",
-    "frequences": "frequency bands VLF/ELF/etc or Non specifie",
-    "etancheite_pression": "waterproofing and pressure specs or Non specifie",
-    "debit_latence": "throughput and latency constraints or Non specifie",
-    "environnement_physique": "temperature corrosion vibration or Non specifie",
-    "autres": ["additional constraint if any"]
+    "acoustique": "valeurs acoustiques ou Non specifie",
+    "frequences": "bandes de frequences (ex: VLF 3-30 kHz) ou Non specifie",
+    "etancheite_pression": "indice IP et pression en bar ou Non specifie",
+    "debit_latence": "debit en bps/kbps et latence en ms ou Non specifie",
+    "environnement_physique": "temperature C, salinite %, vibrations g ou Non specifie",
+    "autres": ["normes applicables si mentionnees"]
   },
-  "mots_cles_domaine": ["keyword1", "keyword2", "keyword3"]
+  "mots_cles_domaine": ["motcle1", "motcle2", "motcle3", "motcle4", "motcle5"]
 }
 
-RULES:
-- exigences_fonctionnelles items MUST start with "Le systeme DOIT"
-- exigences_non_fonctionnelles items: texte MUST start with "Le systeme DOIT", type must be one of: Performance, Fiabilite, Interface, Physique, Securite
-- Generate 4 to 8 items in exigences_fonctionnelles
-- Generate 2 to 4 items in exigences_non_fonctionnelles
-- All strings must be in French
-- Output ONLY the JSON object, starting with { and ending with }
+RÈGLES ABSOLUES :
+1. origine DOIT être exactement : "Explicite" ou "Déduite" ou "Hypothèse"
+2. statut DOIT être : "A confirmer"
+3. Chaque texte DOIT commencer par "Le système DOIT" ou "Le systeme DOIT"
+4. type ENF : Performance | Fiabilite | Interface | Physique | Securite
+5. Génère entre 5 et 9 exigences fonctionnelles (mix obligatoire des 3 niveaux)
+6. Génère entre 2 et 4 exigences non-fonctionnelles
+7. Toutes les valeurs en FRANÇAIS
+8. Si document de contexte fourni : valeurs numériques DOIVENT prioritairement en provenir
+9. PRODUIS UNIQUEMENT l'objet JSON, commençant par { et se terminant par }
 """
 
 # ---------------------------------------------------------------------------
@@ -153,39 +218,53 @@ def analyse():
     if not demande:
         return jsonify({"error": "Demande vide."}), 400
 
-    # Construction du message utilisateur
     parts = []
     if context:
-        max_ctx = 60000 if model.startswith("claude-") else 6000
-        ctx_trunc = context[:max_ctx]
-        parts.append(f"ADDITIONAL CONTEXT DOCUMENT (use as technical reference):\n{ctx_trunc}")
-    parts.append(f"Client request to analyze:\n\n{demande}\n\nOutput the JSON object now:")
-    user_message = "\n\n".join(parts)
+        parts.append(f"DOCUMENT DE CONTEXTE (référence technique — valeurs numériques prioritaires) :\n{context[:20000]}")
+    parts.append(f"DEMANDE CLIENT À ANALYSER :\n\n{demande}\n\nProduis l'objet JSON maintenant :")
+    user_message = "\n\n---\n\n".join(parts)
 
-    try:
-        response = ollama.chat(
-            model=model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": user_message},
-            ],
-            options={"temperature": 0.1, "top_p": 0.9,
-                     "num_predict": 4096, "num_ctx": 16384}
-        )
-        raw_text = response["message"]["content"]
+    def stream_ollama(messages, temperature=0.1):
+        accumulated = ""
+        try:
+            for chunk in ollama.chat(
+                model=model,
+                messages=messages,
+                stream=True,
+                options={"temperature": temperature, "top_p": 0.9,
+                         "num_predict": 4096, "num_ctx": 16384}
+            ):
+                content = (
+                    chunk.message.content if hasattr(chunk, "message")
+                    else chunk.get("message", {}).get("content", "")
+                ) or ""
+                accumulated += content
+                yield f"data: {json.dumps({'type': 'chunk', 'len': len(accumulated)})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            return
+        try:
+            result = parse_json_robust(accumulated)
+            result["_meta"] = {
+                "model":          model,
+                "timestamp":      datetime.datetime.now().isoformat(),
+                "demande_source": demande[:200] + ("..." if len(demande) > 200 else ""),
+                "demande_full":   demande,
+                "context_file":   data.get("context_filename", ""),
+            }
+            yield f"data: {json.dumps({'type': 'result', 'data': result})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'JSON invalide : {str(e)}'})}\n\n"
+        yield "data: [DONE]\n\n"
 
-        result = parse_json_robust(raw_text)
-        result["_meta"] = {
-            "model":          model,
-            "timestamp":      datetime.datetime.now().isoformat(),
-            "demande_source": demande[:200] + ("..." if len(demande) > 200 else ""),
-            "context_file":   data.get("context_filename", ""),
-        }
-        return jsonify(result)
-    except json.JSONDecodeError as e:
-        return jsonify({"error": f"JSON invalide : {str(e)}"}), 500
-    except Exception as e:
-        return jsonify({"error": f"Erreur inattendue : {str(e)}"}), 500
+    return Response(
+        stream_with_context(stream_ollama([
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": user_message},
+        ])),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )
 
 
 @app.route("/extract-context", methods=["POST"])
@@ -214,6 +293,63 @@ def extract_context():
     truncated = len(text) > MAX_CHARS
     text = text[:MAX_CHARS]
     return jsonify({"text": text, "chars": len(text), "truncated": truncated})
+
+
+@app.route("/affiner", methods=["POST"])
+def affiner():
+    """Affine les exigences existantes pour les rendre plus précises (ISO 29148)."""
+    data   = request.get_json(force=True)
+    result = data.get("result")
+    model  = data.get("model", DEFAULT_MODEL).strip()
+    if not result:
+        return jsonify({"error": "Aucun résultat à affiner."}), 400
+
+    refine_msg = (
+        "Voici les exigences système extraites. Améliore-les pour qu'elles soient "
+        "plus précises, mesurables et conformes à la norme ISO 29148 "
+        "(atomiques, vérifiables, non-ambiguës, avec valeurs chiffrées quand possible). "
+        "Conserve la structure JSON exacte et le sens de chaque exigence. "
+        "Améliore uniquement la qualité rédactionnelle.\n\n"
+        f"Objet JSON actuel :\n{json.dumps(result, ensure_ascii=False, indent=2)}\n\n"
+        "Retourne l'objet JSON amélioré :"
+    )
+
+    def stream_refine():
+        accumulated = ""
+        try:
+            for chunk in ollama.chat(
+                model=model,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": refine_msg},
+                ],
+                stream=True,
+                options={"temperature": 0.2, "top_p": 0.9,
+                         "num_predict": 4096, "num_ctx": 16384}
+            ):
+                content = (
+                    chunk.message.content if hasattr(chunk, "message")
+                    else chunk.get("message", {}).get("content", "")
+                ) or ""
+                accumulated += content
+                yield f"data: {json.dumps({'type': 'chunk', 'len': len(accumulated)})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            return
+        try:
+            refined = parse_json_robust(accumulated)
+            refined["_meta"] = result.get("_meta", {})
+            refined["_meta"]["refined_at"] = datetime.datetime.now().isoformat()
+            yield f"data: {json.dumps({'type': 'result', 'data': refined})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'JSON invalide : {str(e)}'})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return Response(
+        stream_with_context(stream_refine()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )
 
 
 @app.route("/export", methods=["POST"])
@@ -897,6 +1033,20 @@ def export_excel():
 
         ws2.row_dimensions[row_num].height = 32
 
+    # Dropdowns priorité, vérification, statut
+    last_ef = len(ef) + 2
+    dv_prio = DataValidation(type="list", formula1='"Must,Should,Could,Won\'t"',
+                             allow_blank=True, showDropDown=False)
+    dv_verif = DataValidation(type="list",
+                              formula1='"Test,Analyse,Inspection,Démonstration"',
+                              allow_blank=True, showDropDown=False)
+    dv_stat = DataValidation(type="list",
+                             formula1='"À valider,Validé,Rejeté,En révision"',
+                             allow_blank=True, showDropDown=False)
+    ws2.add_data_validation(dv_prio);  dv_prio.sqref  = f"C3:C{last_ef}"
+    ws2.add_data_validation(dv_verif); dv_verif.sqref = f"D3:D{last_ef}"
+    ws2.add_data_validation(dv_stat);  dv_stat.sqref  = f"E3:E{last_ef}"
+
     ws2.freeze_panes = "A3"
 
     # =========================================================
@@ -1013,6 +1163,108 @@ def export_excel():
 
         ws4.freeze_panes = "A3"
 
+        # Dropdowns NFR
+        last_nfr = len(nfr) + 2
+        dv_nfr_prio = DataValidation(type="list", formula1='"Must,Should,Could,Won\'t"',
+                                     allow_blank=True, showDropDown=False)
+        dv_nfr_verif = DataValidation(type="list",
+                                      formula1='"Test,Analyse,Inspection,Démonstration"',
+                                      allow_blank=True, showDropDown=False)
+        ws4.add_data_validation(dv_nfr_prio);  dv_nfr_prio.sqref  = f"D3:D{last_nfr}"
+        ws4.add_data_validation(dv_nfr_verif); dv_nfr_verif.sqref = f"E3:E{last_nfr}"
+
+    # =========================================================
+    # FEUILLE 5 : MATRICE DE TRAÇABILITÉ
+    # =========================================================
+    ws5 = wb.create_sheet("Matrice Traçabilité")
+    ws5.sheet_view.showGridLines = False
+
+    ws5.merge_cells("A1:H1")
+    tr_title = ws5["A1"]
+    tr_title.value     = f"MATRICE DE TRAÇABILITÉ — {p.get('systeme_sous_analyse','')}"
+    tr_title.font      = Font(name="Arial", bold=True, size=13, color=NAVY_HEX)
+    tr_title.fill      = light_fill(LIGHT_BG)
+    tr_title.alignment = center_align()
+    ws5.row_dimensions[1].height = 26
+
+    # Texte source en ligne 2
+    demande_src = meta.get("demande_full") or meta.get("demande_source") or ""
+    if demande_src:
+        ws5.merge_cells("A2:H2")
+        src_cell = ws5["A2"]
+        src_cell.value     = f"Source : {demande_src[:300]}{'...' if len(demande_src) > 300 else ''}"
+        src_cell.font      = Font(name="Arial", size=8, color="889999", italic=True)
+        src_cell.fill      = PatternFill("solid", fgColor=LIGHT_BG)
+        src_cell.alignment = left_align(wrap=True)
+        ws5.row_dimensions[2].height = 30
+
+    header_row = 3 if demande_src else 2
+    apply_header_row(ws5, header_row,
+        ["ID", "EXIGENCE", "TYPE", "PRIORITÉ", "MÉTH. VÉRIF.", "RÉFÉRENCE SOURCE", "RESPONSABLE", "STATUT"],
+        col_widths=[8, 50, 14, 12, 16, 20, 16, 14])
+
+    all_items = (
+        [("EF",  str(i+1).zfill(2), xl_ef_text(e),  "Fonctionnelle",
+          xl_ef_prio(e), xl_ef_verif(e)) for i, e in enumerate(ef)] +
+        [("ENF", str(i+1).zfill(2),
+          item.get("text", item.get("texte","")) if isinstance(item, dict) else str(item),
+          item.get("type","Non-Fonctionnelle") if isinstance(item, dict) else "Non-Fonctionnelle",
+          item.get("priority","Must") if isinstance(item, dict) else "Must",
+          item.get("verification","Test") if isinstance(item, dict) else "Test")
+         for i, item in enumerate(nfr if nfr else [])]
+    )
+
+    dv_tr_prio  = DataValidation(type="list", formula1='"Must,Should,Could,Won\'t"',
+                                 allow_blank=True, showDropDown=False)
+    dv_tr_verif = DataValidation(type="list",
+                                 formula1='"Test,Analyse,Inspection,Démonstration"',
+                                 allow_blank=True, showDropDown=False)
+    dv_tr_stat  = DataValidation(type="list",
+                                 formula1='"À valider,Validé,Rejeté,En révision"',
+                                 allow_blank=True, showDropDown=False)
+    ws5.add_data_validation(dv_tr_prio)
+    ws5.add_data_validation(dv_tr_verif)
+    ws5.add_data_validation(dv_tr_stat)
+
+    for idx, (prefix, num, text_val, type_val, prio_val, verif_val) in enumerate(all_items):
+        rn = idx + header_row + 1
+        bg = light_fill(LIGHT_BG) if idx % 2 == 0 else alt_fill()
+
+        c1 = ws5.cell(row=rn, column=1, value=f"{prefix}-{num}")
+        c1.font = body_font(bold=True, color=CYAN_HEX); c1.fill = bg
+        c1.border = thin_border(); c1.alignment = center_align()
+
+        c2 = ws5.cell(row=rn, column=2, value=text_val)
+        c2.font = body_font(size=10); c2.fill = bg
+        c2.border = thin_border(); c2.alignment = left_align(wrap=True)
+
+        c3 = ws5.cell(row=rn, column=3, value=type_val)
+        c3.font = body_font(size=9, color=ORANGE_HEX, bold=True); c3.fill = bg
+        c3.border = thin_border(); c3.alignment = center_align()
+
+        c4 = ws5.cell(row=rn, column=4, value=prio_val)
+        c4.font = body_font(size=9, color=PRIO_COLORS_XL.get(prio_val, ORANGE_HEX), bold=True)
+        c4.fill = bg; c4.border = thin_border(); c4.alignment = center_align()
+
+        c5 = ws5.cell(row=rn, column=5, value=verif_val)
+        c5.font = body_font(size=9, color=CYAN_HEX); c5.fill = bg
+        c5.border = thin_border(); c5.alignment = center_align()
+
+        for col in (6, 7):  # Référence source + Responsable (à remplir)
+            cx = ws5.cell(row=rn, column=col, value="")
+            cx.fill = bg; cx.border = thin_border(); cx.alignment = left_align()
+
+        c8 = ws5.cell(row=rn, column=8, value="À valider")
+        c8.font = body_font(size=9, color="666666"); c8.fill = bg
+        c8.border = thin_border(); c8.alignment = center_align()
+        ws5.row_dimensions[rn].height = 30
+
+    last_tr = len(all_items) + header_row
+    dv_tr_prio.sqref  = f"D{header_row+1}:D{last_tr}"
+    dv_tr_verif.sqref = f"E{header_row+1}:E{last_tr}"
+    dv_tr_stat.sqref  = f"H{header_row+1}:H{last_tr}"
+    ws5.freeze_panes  = f"A{header_row+1}"
+
     # =========================================================
     # Sérialisation
     # =========================================================
@@ -1029,6 +1281,236 @@ def export_excel():
         download_name=filename,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+
+# ===========================================================================
+# EXPORT DOORS CSV (IBM DOORS Next / DNG)
+# ===========================================================================
+@app.route("/export/doors-csv", methods=["POST"])
+def export_doors_csv():
+    """Export CSV compatible IBM DOORS Next (import via assistant de mappage)."""
+    import csv
+    data   = request.get_json(force=True)
+    result = data.get("result")
+    if not result:
+        return jsonify({"error": "Rien à exporter."}), 400
+
+    p       = result.get("perimetre", {})
+    ef      = result.get("exigences_fonctionnelles", [])
+    nfr     = result.get("exigences_non_fonctionnelles", [])
+    meta    = result.get("_meta", {})
+    systeme = p.get("systeme_sous_analyse", "Système")
+    besoin  = result.get("besoin_fondamental", "")
+
+    def ef_t(e): return e.get("text", e) if isinstance(e, dict) else e
+    def ef_p(e): return e.get("priority", "Must") if isinstance(e, dict) else "Must"
+    def ef_v(e): return e.get("verification", "Test") if isinstance(e, dict) else "Test"
+
+    output  = io.StringIO()
+    writer  = csv.writer(output, quoting=csv.QUOTE_ALL)
+
+    # En-têtes DOORS Next compatibles
+    writer.writerow([
+        "Identifier", "Artifact Type", "Module", "Primary Text",
+        "Priority", "Verification Method", "Status",
+        "System", "Fundamental Need", "Created By", "Created On"
+    ])
+
+    ts_str = ""
+    if meta.get("timestamp"):
+        try: ts_str = datetime.datetime.fromisoformat(meta["timestamp"]).strftime("%d/%m/%Y %H:%M")
+        except Exception: ts_str = meta.get("timestamp", "")
+
+    # EF
+    for idx, exig in enumerate(ef):
+        writer.writerow([
+            f"EF-{str(idx+1).zfill(2)}",
+            "Requirement",
+            "Exigences Fonctionnelles",
+            ef_t(exig),
+            ef_p(exig),
+            ef_v(exig),
+            "Proposed",
+            systeme,
+            besoin,
+            "SYREQ",
+            ts_str
+        ])
+
+    # ENF
+    for idx, item in enumerate(nfr):
+        nfr_text  = item.get("text", item.get("texte", "")) if isinstance(item, dict) else str(item)
+        nfr_type  = item.get("type", "Performance") if isinstance(item, dict) else "Performance"
+        nfr_prio  = item.get("priority", "Must") if isinstance(item, dict) else "Must"
+        nfr_verif = item.get("verification", "Test") if isinstance(item, dict) else "Test"
+        writer.writerow([
+            f"ENF-{str(idx+1).zfill(2)}",
+            "Requirement",
+            f"Exigences Non-Fonctionnelles — {nfr_type}",
+            nfr_text,
+            nfr_prio,
+            nfr_verif,
+            "Proposed",
+            systeme,
+            besoin,
+            "SYREQ",
+            ts_str
+        ])
+
+    csv_bytes = output.getvalue().encode("utf-8-sig")  # BOM pour Excel/DOORS
+    buf = io.BytesIO(csv_bytes)
+    buf.seek(0)
+
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    return send_file(buf, as_attachment=True,
+                     download_name=f"exigences_{ts}_doors.csv",
+                     mimetype="text/csv")
+
+
+# ===========================================================================
+# EXPORT ReqIF (IBM DOORS Next / Jazz ELM — standard OMG)
+# ===========================================================================
+@app.route("/export/reqif", methods=["POST"])
+def export_reqif():
+    """Export ReqIF 1.0.1 — format natif IBM DOORS Next et Jazz ELM."""
+    import xml.sax.saxutils as saxutils
+
+    data   = request.get_json(force=True)
+    result = data.get("result")
+    if not result:
+        return jsonify({"error": "Rien à exporter."}), 400
+
+    p       = result.get("perimetre", {})
+    ef      = result.get("exigences_fonctionnelles", [])
+    nfr     = result.get("exigences_non_fonctionnelles", [])
+    meta    = result.get("_meta", {})
+    systeme = p.get("systeme_sous_analyse", "Système")
+    now_iso = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+    def esc(s):   return saxutils.escape(str(s))
+    def slug(s):  return re.sub(r"[^A-Za-z0-9_-]", "-", str(s))[:40]
+    def ef_t(e):  return e.get("text", e) if isinstance(e, dict) else e
+    def ef_p(e):  return e.get("priority", "Must") if isinstance(e, dict) else "Must"
+    def ef_v(e):  return e.get("verification", "Test") if isinstance(e, dict) else "Test"
+
+    prio_map  = {"Must": "EV-MUST", "Should": "EV-SHOULD",
+                 "Could": "EV-COULD", "Won't": "EV-WONT"}
+    verif_map = {"Test": "EV-TEST", "Analyse": "EV-ANALYSE",
+                 "Inspection": "EV-INSP", "Démonstration": "EV-DEMO"}
+
+    all_reqs = []
+    for i, e in enumerate(ef):
+        all_reqs.append({
+            "id": f"SO-EF-{str(i+1).zfill(2)}",
+            "name": f"EF-{str(i+1).zfill(2)}",
+            "text": ef_t(e),
+            "type": "Fonctionnelle",
+            "prio": ef_p(e),
+            "verif": ef_v(e),
+            "module": "Exigences Fonctionnelles"
+        })
+    for i, item in enumerate(nfr):
+        nfr_t = item.get("text", item.get("texte","")) if isinstance(item,dict) else str(item)
+        nfr_type = item.get("type","Performance") if isinstance(item,dict) else "Performance"
+        all_reqs.append({
+            "id": f"SO-ENF-{str(i+1).zfill(2)}",
+            "name": f"ENF-{str(i+1).zfill(2)}",
+            "text": nfr_t,
+            "type": nfr_type,
+            "prio": item.get("priority","Must") if isinstance(item,dict) else "Must",
+            "verif": item.get("verification","Test") if isinstance(item,dict) else "Test",
+            "module": f"Exigences Non-Fonctionnelles — {nfr_type}"
+        })
+
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<REQ-IF xmlns="http://www.omg.org/spec/ReqIF/20110401/reqif.xsd"',
+        '        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">',
+        '  <THE-HEADER>',
+        '    <REQ-IF-HEADER IDENTIFIER="RIF-HDR-SYREQ">',
+        f'      <CREATION-TIME>{now_iso}</CREATION-TIME>',
+        '      <REQ-IF-TOOL-ID>SYREQ v1.0</REQ-IF-TOOL-ID>',
+        '      <REQ-IF-VERSION>1.0.1</REQ-IF-VERSION>',
+        '      <SOURCE-TOOL-ID>SYREQ — Analyseur d\'Exigences Naval</SOURCE-TOOL-ID>',
+        f'      <TITLE>{esc(systeme)}</TITLE>',
+        '    </REQ-IF-HEADER>',
+        '  </THE-HEADER>',
+        '  <CORE-CONTENT><REQ-IF-CONTENT>',
+        '    <DATATYPES>',
+        f'      <DATATYPE-DEFINITION-STRING IDENTIFIER="DT-STRING" LAST-CHANGE="{now_iso}" LONG-NAME="String" MAX-LENGTH="50000"/>',
+        f'      <DATATYPE-DEFINITION-ENUMERATION IDENTIFIER="DT-PRIORITY" LAST-CHANGE="{now_iso}" LONG-NAME="Priority">',
+        '        <SPECIFIED-VALUES>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-MUST"   LAST-CHANGE="{now_iso}" LONG-NAME="Must"/>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-SHOULD" LAST-CHANGE="{now_iso}" LONG-NAME="Should"/>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-COULD"  LAST-CHANGE="{now_iso}" LONG-NAME="Could"/>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-WONT"   LAST-CHANGE="{now_iso}" LONG-NAME="Won\'t"/>',
+        '        </SPECIFIED-VALUES>',
+        '      </DATATYPE-DEFINITION-ENUMERATION>',
+        f'      <DATATYPE-DEFINITION-ENUMERATION IDENTIFIER="DT-VERIF" LAST-CHANGE="{now_iso}" LONG-NAME="Verification Method">',
+        '        <SPECIFIED-VALUES>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-TEST"    LAST-CHANGE="{now_iso}" LONG-NAME="Test"/>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-ANALYSE" LAST-CHANGE="{now_iso}" LONG-NAME="Analyse"/>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-INSP"    LAST-CHANGE="{now_iso}" LONG-NAME="Inspection"/>',
+        f'          <ENUM-VALUE IDENTIFIER="EV-DEMO"    LAST-CHANGE="{now_iso}" LONG-NAME="Démonstration"/>',
+        '        </SPECIFIED-VALUES>',
+        '      </DATATYPE-DEFINITION-ENUMERATION>',
+        '    </DATATYPES>',
+        '    <SPEC-TYPES>',
+        f'      <SPEC-OBJECT-TYPE IDENTIFIER="SOT-REQ" LAST-CHANGE="{now_iso}" LONG-NAME="Exigence">',
+        '        <SPEC-ATTRIBUTES>',
+        f'          <ATTRIBUTE-DEFINITION-STRING IDENTIFIER="AD-TEXT"   LAST-CHANGE="{now_iso}" LONG-NAME="Texte"><TYPE><DATATYPE-DEFINITION-STRING-REF>DT-STRING</DATATYPE-DEFINITION-STRING-REF></TYPE></ATTRIBUTE-DEFINITION-STRING>',
+        f'          <ATTRIBUTE-DEFINITION-STRING IDENTIFIER="AD-TYPE"   LAST-CHANGE="{now_iso}" LONG-NAME="Type"><TYPE><DATATYPE-DEFINITION-STRING-REF>DT-STRING</DATATYPE-DEFINITION-STRING-REF></TYPE></ATTRIBUTE-DEFINITION-STRING>',
+        f'          <ATTRIBUTE-DEFINITION-STRING IDENTIFIER="AD-MODULE" LAST-CHANGE="{now_iso}" LONG-NAME="Module"><TYPE><DATATYPE-DEFINITION-STRING-REF>DT-STRING</DATATYPE-DEFINITION-STRING-REF></TYPE></ATTRIBUTE-DEFINITION-STRING>',
+        f'          <ATTRIBUTE-DEFINITION-ENUMERATION IDENTIFIER="AD-PRIO"  LAST-CHANGE="{now_iso}" LONG-NAME="Priorité" MULTI-VALUED="false"><TYPE><DATATYPE-DEFINITION-ENUMERATION-REF>DT-PRIORITY</DATATYPE-DEFINITION-ENUMERATION-REF></TYPE></ATTRIBUTE-DEFINITION-ENUMERATION>',
+        f'          <ATTRIBUTE-DEFINITION-ENUMERATION IDENTIFIER="AD-VERIF" LAST-CHANGE="{now_iso}" LONG-NAME="Vérification" MULTI-VALUED="false"><TYPE><DATATYPE-DEFINITION-ENUMERATION-REF>DT-VERIF</DATATYPE-DEFINITION-ENUMERATION-REF></TYPE></ATTRIBUTE-DEFINITION-ENUMERATION>',
+        '        </SPEC-ATTRIBUTES>',
+        '      </SPEC-OBJECT-TYPE>',
+        f'      <SPECIFICATION-TYPE IDENTIFIER="ST-SPEC" LAST-CHANGE="{now_iso}" LONG-NAME="Spécification"/>',
+        '    </SPEC-TYPES>',
+        '    <SPEC-OBJECTS>',
+    ]
+
+    for req in all_reqs:
+        prio_ref  = prio_map.get(req["prio"],  "EV-MUST")
+        verif_ref = verif_map.get(req["verif"], "EV-TEST")
+        lines += [
+            f'      <SPEC-OBJECT IDENTIFIER="{req["id"]}" LAST-CHANGE="{now_iso}" LONG-NAME="{esc(req["name"])}">',
+            '        <TYPE><SPEC-OBJECT-TYPE-REF>SOT-REQ</SPEC-OBJECT-TYPE-REF></TYPE>',
+            '        <VALUES>',
+            f'          <ATTRIBUTE-VALUE-STRING THE-VALUE="{esc(req["text"])}"><DEFINITION><ATTRIBUTE-DEFINITION-STRING-REF>AD-TEXT</ATTRIBUTE-DEFINITION-STRING-REF></DEFINITION></ATTRIBUTE-VALUE-STRING>',
+            f'          <ATTRIBUTE-VALUE-STRING THE-VALUE="{esc(req["type"])}"><DEFINITION><ATTRIBUTE-DEFINITION-STRING-REF>AD-TYPE</ATTRIBUTE-DEFINITION-STRING-REF></DEFINITION></ATTRIBUTE-VALUE-STRING>',
+            f'          <ATTRIBUTE-VALUE-STRING THE-VALUE="{esc(req["module"])}"><DEFINITION><ATTRIBUTE-DEFINITION-STRING-REF>AD-MODULE</ATTRIBUTE-DEFINITION-STRING-REF></DEFINITION></ATTRIBUTE-VALUE-STRING>',
+            f'          <ATTRIBUTE-VALUE-ENUMERATION><DEFINITION><ATTRIBUTE-DEFINITION-ENUMERATION-REF>AD-PRIO</ATTRIBUTE-DEFINITION-ENUMERATION-REF></DEFINITION><VALUES><ENUM-VALUE-REF>{prio_ref}</ENUM-VALUE-REF></VALUES></ATTRIBUTE-VALUE-ENUMERATION>',
+            f'          <ATTRIBUTE-VALUE-ENUMERATION><DEFINITION><ATTRIBUTE-DEFINITION-ENUMERATION-REF>AD-VERIF</ATTRIBUTE-DEFINITION-ENUMERATION-REF></DEFINITION><VALUES><ENUM-VALUE-REF>{verif_ref}</ENUM-VALUE-REF></VALUES></ATTRIBUTE-VALUE-ENUMERATION>',
+            '        </VALUES>',
+            '      </SPEC-OBJECT>',
+        ]
+
+    lines += [
+        '    </SPEC-OBJECTS>',
+        '    <SPEC-RELATIONS/>',
+        '    <SPECIFICATIONS>',
+        f'      <SPECIFICATION IDENTIFIER="SPEC-1" LAST-CHANGE="{now_iso}" LONG-NAME="{esc(systeme)}">',
+        '        <TYPE><SPECIFICATION-TYPE-REF>ST-SPEC</SPECIFICATION-TYPE-REF></TYPE>',
+        '        <CHILDREN>',
+    ]
+    for req in all_reqs:
+        lines.append(f'          <SPEC-HIERARCHY IDENTIFIER="SH-{slug(req["id"])}" LAST-CHANGE="{now_iso}"><OBJECT><SPEC-OBJECT-REF>{req["id"]}</SPEC-OBJECT-REF></OBJECT></SPEC-HIERARCHY>')
+    lines += [
+        '        </CHILDREN>',
+        '      </SPECIFICATION>',
+        '    </SPECIFICATIONS>',
+        '  </REQ-IF-CONTENT></CORE-CONTENT>',
+        '</REQ-IF>',
+    ]
+
+    xml_bytes = "\n".join(lines).encode("utf-8")
+    buf = io.BytesIO(xml_bytes)
+    buf.seek(0)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    return send_file(buf, as_attachment=True,
+                     download_name=f"exigences_{ts}.reqif",
+                     mimetype="application/xml")
 
 
 # ---------------------------------------------------------------------------
