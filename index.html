@@ -60,7 +60,7 @@ main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 0 24px;ali
 
 /* INPUT SIDE */
 .input-label{font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
-textarea{width:100%;min-height:250px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);font-size:12.5px;line-height:1.7;padding:12px 14px;resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s;caret-color:var(--accent)}
+textarea{width:100%;min-height:220px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);font-size:12.5px;line-height:1.7;padding:12px 14px;resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s;caret-color:var(--accent)}
 textarea::placeholder{color:var(--text-muted)}
 textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .char-count{text-align:right;font-size:10px;color:var(--text-muted);margin-top:4px}
@@ -80,6 +80,16 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .progress-bar{height:100%;width:40%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;animation:progress-slide 1.4s ease-in-out infinite;box-shadow:0 0 8px var(--accent)}
 @keyframes progress-slide{0%{transform:translateX(-150%)}100%{transform:translateX(350%)}}
 
+/* LOAD + HISTORY */
+.btn-load{width:100%;margin-top:8px;padding:7px;background:transparent;border:1px dashed var(--border);color:var(--text-muted);font-family:var(--font-mono);font-size:10px;letter-spacing:1px;border-radius:var(--radius);cursor:pointer;transition:all .2s}
+.btn-load:hover{border-color:var(--accent2);color:var(--accent2)}
+.history-section{margin-top:14px}
+.history-label{font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.history-list{display:flex;flex-direction:column;gap:4px}
+.history-item{background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;padding:5px 10px;border-radius:var(--radius);cursor:pointer;text-align:left;transition:all .2s;display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%}
+.history-item:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.04)}
+.history-ts{color:var(--text-muted);font-size:9px;flex-shrink:0}
+
 /* PLACEHOLDER */
 .results-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:380px;color:var(--text-muted);text-align:center;gap:12px}
 .radar-anim{width:80px;height:80px;border:1.5px solid var(--text-muted);border-radius:50%;position:relative;animation:radar-rotate 3s linear infinite}
@@ -88,36 +98,47 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 @keyframes radar-rotate{to{transform:rotate(360deg)}}
 .placeholder-text{font-size:11px;letter-spacing:2px;text-transform:uppercase}
 
-/* =====================================================================
-   RÉSULTATS ÉDITABLES
-===================================================================== */
+/* STATS BAR */
+.stats-bar{display:flex;flex-wrap:wrap;gap:8px 16px;padding:7px 16px;background:rgba(0,212,255,.03);border-bottom:1px solid var(--border);font-size:10px;color:var(--text-muted);letter-spacing:1px}
+.stat-item{display:flex;align-items:center;gap:4px}
+.stat-val{font-weight:bold;color:var(--text-dim)}
+.stat-must{color:var(--error) !important}
+.stat-should{color:var(--warning) !important}
+.stat-could{color:var(--accent) !important}
+.stat-wont{color:var(--text-muted) !important}
+.stat-warn{color:var(--warning)}
+
+/* SOURCE PANEL */
+.source-panel{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.source-toggle{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;cursor:pointer;font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;transition:color .2s;user-select:none}
+.source-toggle:hover{color:var(--text-dim)}
+.source-arrow{transition:transform .2s;font-style:normal;font-size:9px}
+.source-content{padding:10px 12px;font-size:11px;color:var(--text-dim);line-height:1.6;display:none;white-space:pre-wrap;border-top:1px solid var(--border);max-height:150px;overflow-y:auto}
+
+/* INLINE SELECT */
+.inline-select{background:var(--bg-card);border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:10px;padding:2px 18px 2px 6px;border-radius:2px;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%235a8aaa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center;flex-shrink:0;transition:border-color .2s}
+.inline-select:hover{border-color:var(--accent)}
+.inline-select.p-must{color:var(--error);border-color:rgba(255,61,90,.4)}
+.inline-select.p-should{color:var(--warning);border-color:rgba(255,204,0,.35)}
+.inline-select.p-could{color:var(--accent);border-color:rgba(0,212,255,.3)}
+.inline-select.p-wont{color:var(--text-muted)}
+
+/* QUALITY */
+.quality-warn-text mark{background:rgba(255,204,0,.18);color:var(--warning);border-radius:2px;padding:0 2px;font-style:normal}
+.quality-badge{font-size:9px;color:var(--warning);flex-shrink:0;line-height:1.6;padding:0 2px;cursor:help}
+
+/* COPY ROW */
+.btn-copy-row{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;flex-shrink:0;padding:0 2px;line-height:1.4;border-radius:2px;transition:color .15s}
+.btn-copy-row:hover{color:var(--accent2)}
+
+/* RÉSULTATS ÉDITABLES */
 .result-section{margin-bottom:18px}
 .section-title{font-family:var(--font-ui);font-weight:600;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .section-title::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0}
-
-/* Champ éditable inline */
-[contenteditable]{
-  outline:none;
-  border-radius:2px;
-  transition:background .15s, box-shadow .15s;
-  cursor:text;
-  position:relative;
-}
+[contenteditable]{outline:none;border-radius:2px;transition:background .15s,box-shadow .15s;cursor:text;position:relative}
 [contenteditable]:hover{background:rgba(0,212,255,.04)}
-[contenteditable]:focus{
-  background:rgba(0,212,255,.07);
-  box-shadow:inset 0 0 0 1px var(--accent);
-}
-/* Indicateur "éditable" au survol */
-[contenteditable]::after{
-  content:'✎';
-  font-size:9px;
-  color:var(--text-muted);
-  margin-left:6px;
-  opacity:0;
-  transition:opacity .2s;
-  pointer-events:none;
-}
+[contenteditable]:focus{background:rgba(0,212,255,.07);box-shadow:inset 0 0 0 1px var(--accent)}
+[contenteditable]::after{content:'✎';font-size:9px;color:var(--text-muted);margin-left:6px;opacity:0;transition:opacity .2s;pointer-events:none}
 [contenteditable]:hover::after{opacity:1}
 
 /* Périmètre */
@@ -125,72 +146,49 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .sub-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
 .sub-card-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
 .tag-list{display:flex;flex-wrap:wrap;gap:5px;min-height:22px}
-
-/* Tags éditables */
-.tag{
-  background:rgba(0,212,255,.07);border:1px solid var(--border);color:var(--accent);
-  font-size:11px;padding:2px 6px 2px 8px;border-radius:2px;letter-spacing:.5px;
-  display:inline-flex;align-items:center;gap:4px;
-}
+.tag{background:rgba(0,212,255,.07);border:1px solid var(--border);color:var(--accent);font-size:11px;padding:2px 6px 2px 8px;border-radius:2px;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px}
 .tag.green{color:var(--accent2);background:rgba(0,255,157,.06);border-color:rgba(0,255,157,.2)}
 .tag.orange{color:var(--accent3);background:rgba(255,107,53,.07);border-color:rgba(255,107,53,.25)}
 .tag span[contenteditable]{min-width:30px;display:inline-block}
-.tag .del-tag{
-  cursor:pointer;font-size:10px;color:var(--text-muted);
-  line-height:1;padding:0 2px;border-radius:1px;
-  transition:color .15s;
-}
+.tag .del-tag{cursor:pointer;font-size:10px;color:var(--text-muted);line-height:1;padding:0 2px;border-radius:1px;transition:color .15s}
 .tag .del-tag:hover{color:var(--error)}
-.btn-add-tag{
-  background:transparent;border:1px dashed var(--text-muted);color:var(--text-muted);
-  font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:2px;
-  cursor:pointer;transition:all .2s;letter-spacing:.5px;
-}
+.btn-add-tag{background:transparent;border:1px dashed var(--text-muted);color:var(--text-muted);font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:2px;cursor:pointer;transition:all .2s;letter-spacing:.5px}
 .btn-add-tag:hover{border-color:var(--accent);color:var(--accent)}
 
-/* Besoin fondamental */
-.besoin-text{
-  background:rgba(0,212,255,.04);border-left:3px solid var(--accent);
-  padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;
-  border-radius:0 var(--radius) var(--radius) 0;
-  min-height:40px;
-}
+/* Besoin */
+.besoin-text{background:rgba(0,212,255,.04);border-left:3px solid var(--accent);padding:10px 14px;font-size:13px;color:var(--text);line-height:1.6;border-radius:0 var(--radius) var(--radius) 0;min-height:40px}
 
-/* Exigences fonctionnelles */
+/* EF rows */
 .exigences-list{display:flex;flex-direction:column;gap:6px}
-.exigence-item{
-  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
-  padding:7px 10px 7px 12px;font-size:12px;line-height:1.5;
-  display:flex;gap:8px;align-items:flex-start;transition:border-color .2s;
-}
+.exigence-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px 6px 10px;font-size:12px;line-height:1.5;display:flex;flex-direction:column;gap:4px;transition:border-color .2s}
 .exigence-item:hover{border-color:var(--accent2)}
 .exigence-item.drag-over{border-color:var(--accent);background:rgba(0,212,255,.06)}
 .exigence-item.dragging{opacity:.4}
-.drag-handle{
-  cursor:grab;color:var(--text-muted);font-size:12px;flex-shrink:0;
-  margin-top:1px;padding:0 2px;user-select:none;
-  transition:color .15s;
-}
+.row-top{display:flex;gap:6px;align-items:flex-start}
+.row-bottom{display:flex;gap:6px;align-items:center;padding-left:28px;flex-wrap:wrap}
+.drag-handle{cursor:grab;color:var(--text-muted);font-size:12px;flex-shrink:0;margin-top:2px;padding:0 2px;user-select:none;transition:color .15s}
 .drag-handle:hover{color:var(--accent)}
 .drag-handle:active{cursor:grabbing}
-.exigence-num{color:var(--accent2);font-size:10px;font-weight:bold;letter-spacing:1px;flex-shrink:0;margin-top:1px}
+.exigence-num{color:var(--accent2);font-size:10px;font-weight:bold;letter-spacing:1px;flex-shrink:0;margin-top:2px;min-width:36px}
 .exigence-text{flex:1;min-width:0}
 .exigence-must{color:var(--accent3);font-weight:bold}
-.del-row{
-  cursor:pointer;color:var(--text-muted);font-size:14px;flex-shrink:0;
-  padding:0 3px;line-height:1.4;border-radius:2px;transition:color .15s, background .15s;
-  margin-top:0;
-}
+.del-row{cursor:pointer;color:var(--text-muted);font-size:14px;flex-shrink:0;padding:0 3px;line-height:1.4;border-radius:2px;transition:color .15s,background .15s;background:none;border:none}
 .del-row:hover{color:var(--error);background:rgba(255,61,90,.1)}
+.row-lbl{font-size:9px;color:var(--text-muted);letter-spacing:1px;flex-shrink:0}
+.row-lbl-gap{margin-left:8px}
 
-/* Bouton ajouter une ligne */
-.btn-add-row{
-  width:100%;margin-top:6px;padding:6px;
-  background:transparent;border:1px dashed var(--text-muted);
-  color:var(--text-muted);font-family:var(--font-mono);font-size:11px;
-  letter-spacing:1px;border-radius:var(--radius);cursor:pointer;
-  transition:all .2s;
-}
+/* NFR */
+.nfr-item{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:6px 8px 6px 10px;font-size:12px;display:flex;flex-direction:column;gap:4px;transition:border-color .2s}
+.nfr-item:hover{border-left-color:var(--accent2)}
+.nfr-type-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:2px;flex-shrink:0;margin-top:2px}
+.nfr-perf{color:#c0a030;background:rgba(192,160,48,.1);border:1px solid rgba(192,160,48,.3)}
+.nfr-fiab{color:var(--accent2);background:rgba(0,255,157,.07);border:1px solid rgba(0,255,157,.25)}
+.nfr-iface{color:var(--accent);background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.25)}
+.nfr-phys{color:#a09090;background:rgba(160,144,144,.1);border:1px solid rgba(160,144,144,.3)}
+.nfr-secu{color:var(--error);background:rgba(255,61,90,.07);border:1px solid rgba(255,61,90,.25)}
+
+/* Add row btn */
+.btn-add-row{width:100%;margin-top:6px;padding:6px;background:transparent;border:1px dashed var(--text-muted);color:var(--text-muted);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;border-radius:var(--radius);cursor:pointer;transition:all .2s}
 .btn-add-row:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(0,255,157,.04)}
 
 /* Contraintes */
@@ -200,19 +198,15 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .contrainte-val{color:var(--text);line-height:1.4;min-height:16px}
 .contrainte-val.na{color:var(--text-muted);font-style:italic}
 
-/* Mots-clés */
+/* Keywords */
 .keywords-wrap{display:flex;flex-wrap:wrap;gap:6px;min-height:22px}
 
-/* EDIT MODE INDICATOR */
-.edit-mode-bar{
-  display:flex;align-items:center;gap:8px;padding:7px 16px;
-  background:rgba(0,212,255,.05);border-top:1px solid var(--border);
-  font-size:10px;color:var(--text-dim);letter-spacing:1px;
-}
+/* Edit bar */
+.edit-mode-bar{display:flex;align-items:center;gap:8px;padding:7px 16px;background:rgba(0,212,255,.05);border-top:1px solid var(--border);font-size:10px;color:var(--text-dim);letter-spacing:1px}
 .edit-indicator{width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 6px var(--accent2);animation:blink 1.5s ease-in-out infinite;flex-shrink:0}
 
-/* EXPORT BAR */
-.export-bar{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);}
+/* Export bar */
+.export-bar{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:12px 16px;background:var(--bg-card);border-top:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius)}
 .btn-export{padding:8px 6px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:all .2s;text-align:center;width:100%}
 .btn-export:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(0,255,157,.05)}
 .btn-word{border-color:#2b6cb0;color:#63b3ed}
@@ -220,20 +214,15 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .btn-excel{border-color:#276748;color:#68d391}
 .btn-excel:hover{border-color:#68d391;color:#68d391;background:rgba(104,211,145,.12)}
 
-/* TOAST */
+/* Toast */
 #toast{position:fixed;bottom:24px;left:24px;background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--accent);color:var(--text);font-size:12px;padding:12px 18px;border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,.6);z-index:5;transform:translateY(20px);opacity:0;transition:all .3s;max-width:320px;letter-spacing:.5px;pointer-events:none}
 #toast.show{transform:translateY(0);opacity:1}
 #toast.success{border-left-color:var(--success)}
 #toast.err-toast{border-left-color:var(--error)}
 .error-box{background:rgba(255,61,90,.07);border:1px solid rgba(255,61,90,.3);border-radius:var(--radius);padding:14px;color:var(--error);font-size:12px;line-height:1.6}
 
-/* Système sous analyse éditable */
-.systeme-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:rgba(0,212,255,.07);border:1px solid var(--border);
-  color:var(--accent);font-size:13px;padding:4px 12px;border-radius:2px;
-  margin-bottom:10px;
-}
+/* Système badge */
+.systeme-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,255,.07);border:1px solid var(--border);color:var(--accent);font-size:13px;padding:4px 12px;border-radius:2px;margin-bottom:10px}
 
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -244,7 +233,6 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 <body>
 <div class="app-wrapper">
 
-<!-- HEADER -->
 <header>
   <div class="logo">
     <div class="logo-icon"></div>
@@ -268,10 +256,9 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
   </div>
 </header>
 
-<!-- MAIN -->
 <main>
 
-  <!-- PANNEAU GAUCHE : INPUT -->
+  <!-- PANNEAU GAUCHE -->
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title">Demande Client</span>
@@ -280,7 +267,7 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
     <div class="panel-body">
       <div class="input-label">Saisir ou coller la demande à analyser :</div>
       <textarea id="demande-input" maxlength="4000"
-        placeholder="Ex : « Nous avons besoin d'un système de communication acoustique sous-marin permettant à un sous-marin de transmettre des données à un navire de surface à une profondeur maximale de 400 mètres, avec un débit minimal de 1 kbps et une portée de 10 km... »"></textarea>
+        placeholder="Ex : « Nous avons besoin d'un système de communication acoustique sous-marin permettant à un sous-marin de transmettre des données à un navire de surface à une profondeur maximale de 400 mètres... »"></textarea>
       <div class="char-count"><span id="char-count">0</span> / 4000</div>
 
       <div class="quick-examples">
@@ -299,35 +286,40 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
       <div class="progress-bar-wrap" id="progress-wrap">
         <div class="progress-bar"></div>
       </div>
+
+      <button class="btn-load" id="btn-load-json">⬆ Charger un export JSON</button>
+      <input type="file" id="file-input" accept=".json" style="display:none"/>
+
+      <div class="history-section" id="history-section" style="display:none;">
+        <div class="history-label">Analyses récentes</div>
+        <div class="history-list" id="history-list"></div>
+      </div>
     </div>
   </div>
 
-  <!-- PANNEAU DROIT : RÉSULTATS ÉDITABLES -->
+  <!-- PANNEAU DROIT -->
   <div class="panel" id="result-panel">
     <div class="panel-header">
       <span class="panel-title">Exigences Extraites</span>
       <span class="panel-badge" id="result-badge">EN ATTENTE</span>
     </div>
+    <div class="stats-bar" id="stats-bar" style="display:none;"></div>
     <div id="result-body">
       <div class="results-placeholder">
         <div class="radar-anim"></div>
         <div class="placeholder-text">En attente d'analyse...</div>
-        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">
-          Saisir une demande puis lancer l'analyse
-        </div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">Saisir une demande puis lancer l'analyse</div>
       </div>
     </div>
-    <!-- Barre "mode édition" -->
     <div class="edit-mode-bar" id="edit-mode-bar" style="display:none;">
       <div class="edit-indicator"></div>
       <span>MODE ÉDITION ACTIF — Cliquez sur n'importe quel champ pour le modifier</span>
     </div>
-    <!-- Boutons export -->
     <div class="export-bar" id="export-bar" style="display:none;">
-      <button class="btn-export" id="btn-export-json" title="Sauvegarder en JSON local">⬇ JSON</button>
-      <button class="btn-export btn-word" id="btn-export-word" title="Télécharger en Word (.docx)">📄 Word</button>
-      <button class="btn-export btn-excel" id="btn-export-excel" title="Télécharger en Excel (.xlsx)">📊 Excel</button>
-      <button class="btn-export" id="btn-copy-json" title="Copier le JSON dans le presse-papiers">◻ Copier</button>
+      <button class="btn-export" id="btn-export-json">⬇ JSON</button>
+      <button class="btn-export btn-word" id="btn-export-word">📄 Word</button>
+      <button class="btn-export btn-excel" id="btn-export-excel">📊 Excel</button>
+      <button class="btn-export" id="btn-copy-json">◻ Copier</button>
     </div>
   </div>
 
@@ -337,8 +329,11 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 <div id="toast"></div>
 
 <script>
+(function () {
+'use strict';
+
 /* =========================================================================
-   EXEMPLES PRÉDÉFINIS
+   EXEMPLES
 ========================================================================= */
 const EXAMPLES = {
   sonar:`Nous avons besoin d'un sonar passif basse fréquence embarqué sur sous-marin de classe Rubis. Le système doit détecter des contacts à une distance minimale de 25 km dans un environnement à fort bruit de fond (trafic maritime dense). La profondeur maximale d'opération est de 300 mètres, avec une pression hydrostatique de 30 bar. L'interférence de la propulsion nucléaire doit être minimisée. Autonomie de traitement : temps réel, latence < 200 ms.`,
@@ -348,7 +343,31 @@ const EXAMPLES = {
 };
 
 /* =========================================================================
-   REFS DOM
+   CONSTANTES SE
+========================================================================= */
+const VAGUE_WORDS = [
+  'adéquat','adéquate','suffisant','suffisante','approprié','appropriée',
+  'convenable','rapide','lent','lente','robuste','fiable','convivial',
+  'facile','simple','tbd','tbc','à définir','si nécessaire','le cas échéant',
+  'notamment','acceptable','raisonnable','optimal','optimale','performant',
+  'performante','maximum possible','dès que possible','dans les meilleurs délais',
+  'efficacement','correctement','bien','bon','bonne','aisément'
+];
+
+const PRIORITY_OPTIONS = ['Must', 'Should', 'Could', "Won't"];
+const VERIF_OPTIONS    = ['Test', 'Analyse', 'Inspection', 'Démonstration'];
+const NFR_TYPES        = ['Performance', 'Fiabilité', 'Interface', 'Physique', 'Sécurité'];
+
+const NFR_CSS = {
+  'Performance': 'nfr-perf',
+  'Fiabilité':   'nfr-fiab',
+  'Interface':   'nfr-iface',
+  'Physique':    'nfr-phys',
+  'Sécurité':    'nfr-secu'
+};
+
+/* =========================================================================
+   DOM
 ========================================================================= */
 const textarea     = document.getElementById('demande-input');
 const charCount    = document.getElementById('char-count');
@@ -359,31 +378,122 @@ const resultBody   = document.getElementById('result-body');
 const resultBadge  = document.getElementById('result-badge');
 const exportBar    = document.getElementById('export-bar');
 const editModeBar  = document.getElementById('edit-mode-bar');
+const statsBar     = document.getElementById('stats-bar');
 const modelSelect  = document.getElementById('model-select');
 const statusDot    = document.getElementById('status-dot');
 const statusLabel  = document.getElementById('status-label');
 const toast        = document.getElementById('toast');
 
-let currentResult = null;  // Objet JSON brut (mis à jour à chaque édition)
+let currentResult = null;
 
 /* =========================================================================
    UTILITAIRES
 ========================================================================= */
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function genId(prefix) {
+  return prefix + '-' + Math.random().toString(16).slice(2, 6).toUpperCase();
+}
+
+function hasVagueWord(text) {
+  const lower = text.toLowerCase();
+  return VAGUE_WORDS.some(w => lower.includes(w));
+}
+
+function highlightVague(rawText) {
+  let html = escHtml(rawText);
+  VAGUE_WORDS.forEach(w => {
+    const re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    html = html.replace(re, '<mark>$1</mark>');
+  });
+  return html;
+}
 
 let toastTimeout;
-function showToast(msg, type='', duration=3000){
+function showToast(msg, type = '', duration = 3000) {
   toast.textContent = msg;
-  toast.className = 'show ' + type;
+  toast.className   = 'show ' + type;
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(()=>{ toast.className=''; }, duration);
+  toastTimeout = setTimeout(() => { toast.className = ''; }, duration);
+}
+
+function makeInlineSelect(options, value, extraClass, onChange) {
+  const sel = document.createElement('select');
+  sel.className = 'inline-select ' + (extraClass || '');
+  options.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = o;
+    if (o === value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  const applyPClass = () => {
+    sel.classList.remove('p-must','p-should','p-could','p-wont');
+    const map = { 'Must':'p-must','Should':'p-should','Could':'p-could',"Won't":'p-wont' };
+    if (map[sel.value]) sel.classList.add(map[sel.value]);
+  };
+  applyPClass();
+  sel.addEventListener('change', () => {
+    applyPClass();
+    if (onChange) onChange(sel.value);
+    syncResult();
+    updateStats();
+  });
+  return sel;
 }
 
 /* =========================================================================
-   STATUT OLLAMA + MODÈLES
+   HISTORIQUE DE SESSION
 ========================================================================= */
-async function checkStatus(){
-  try{
+let sessionHistory = [];
+try { sessionHistory = JSON.parse(sessionStorage.getItem('syreq_history') || '[]'); } catch(e) {}
+
+function saveToHistory(result) {
+  const entry = {
+    ts:      result._meta && result._meta.timestamp ? result._meta.timestamp : new Date().toISOString(),
+    systeme: result.perimetre && result.perimetre.systeme_sous_analyse ? result.perimetre.systeme_sous_analyse : '?',
+    model:   result._meta && result._meta.model ? result._meta.model : '?',
+    data:    JSON.parse(JSON.stringify(result))
+  };
+  sessionHistory = [entry, ...sessionHistory].slice(0, 5);
+  try { sessionStorage.setItem('syreq_history', JSON.stringify(sessionHistory)); } catch(e) {}
+  renderHistory();
+}
+
+function renderHistory() {
+  const section = document.getElementById('history-section');
+  const list    = document.getElementById('history-list');
+  if (!sessionHistory.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = '';
+  sessionHistory.forEach(entry => {
+    const btn = document.createElement('button');
+    btn.className = 'history-item';
+    let tsStr = '';
+    try { tsStr = new Date(entry.ts).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}); } catch(e) {}
+    btn.innerHTML =
+      '<span>' + escHtml(entry.systeme) + '</span>' +
+      '<span class="history-ts">' + tsStr + ' · ' + escHtml(String(entry.model).replace(/:latest$/i,'')) + '</span>';
+    btn.addEventListener('click', () => {
+      currentResult = JSON.parse(JSON.stringify(entry.data));
+      renderResult(currentResult);
+      resultBadge.textContent   = 'CHARGÉ — ÉDITABLE';
+      exportBar.style.display   = 'grid';
+      editModeBar.style.display = 'flex';
+      statsBar.style.display    = 'flex';
+    });
+    list.appendChild(btn);
+  });
+}
+
+/* =========================================================================
+   STATUT OLLAMA
+========================================================================= */
+async function checkStatus() {
+  try {
     const r = await fetch('/models');
     const d = await r.json();
     statusDot.classList.add('online');
@@ -392,24 +502,27 @@ async function checkStatus(){
     const models = (d.models && d.models.length) ? d.models : ['llama3','mistral'];
     models.forEach(m => {
       const o = document.createElement('option');
-      o.value = o.textContent = m;
+      o.value = m;
+      o.textContent = m.replace(/:latest$/i, '');
       modelSelect.appendChild(o);
     });
   } catch {
     statusDot.classList.add('err');
     statusLabel.textContent = 'OLLAMA HORS LIGNE';
-    showToast('Ollama non détecté. Lancez "ollama serve".','err-toast',5000);
+    btnAnalyse.disabled = true;
+    btnLabel.textContent = '⬡ OLLAMA HORS LIGNE';
+    showToast('Ollama non détecté. Lancez "ollama serve".', 'err-toast', 5000);
   }
 }
-checkStatus();
 
-/* Compteur de caractères */
 textarea.addEventListener('input', () => { charCount.textContent = textarea.value.length; });
+textarea.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) btnAnalyse.click();
+});
 
-/* Exemples rapides */
 document.querySelectorAll('.example-chip').forEach(c => {
   c.addEventListener('click', () => {
-    if(EXAMPLES[c.dataset.example]){
+    if (EXAMPLES[c.dataset.example]) {
       textarea.value = EXAMPLES[c.dataset.example];
       charCount.textContent = textarea.value.length;
       textarea.focus();
@@ -418,145 +531,163 @@ document.querySelectorAll('.example-chip').forEach(c => {
 });
 
 /* =========================================================================
-   ANALYSE PRINCIPALE
+   ANALYSE
 ========================================================================= */
 btnAnalyse.addEventListener('click', async () => {
   const demande = textarea.value.trim();
-  if(!demande){ showToast('Saisissez une demande avant d\'analyser.','err-toast'); return; }
+  if (!demande) { showToast('Saisissez une demande avant d\'analyser.', 'err-toast'); return; }
 
   btnAnalyse.disabled = true;
   btnLabel.textContent = '⟳ ANALYSE EN COURS...';
   progressWrap.classList.add('active');
-  exportBar.style.display = 'none';
+  exportBar.style.display   = 'none';
   editModeBar.style.display = 'none';
-  resultBadge.textContent = 'TRAITEMENT...';
+  statsBar.style.display    = 'none';
+  resultBadge.textContent   = 'TRAITEMENT...';
   resultBody.innerHTML = `
     <div class="results-placeholder">
       <div class="radar-anim" style="border-color:var(--accent);"></div>
       <div class="placeholder-text" style="color:var(--accent);">Interrogation du modèle...</div>
-      <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">
-        Modèle : ${modelSelect.value} — Veuillez patienter.
-      </div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">Modèle : ${escHtml(modelSelect.value)} — Veuillez patienter.</div>
     </div>`;
 
   try {
     const r = await fetch('/analyse', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ demande, model: modelSelect.value })
     });
     const data = await r.json();
-    if(!r.ok || data.error) throw new Error(data.error || 'Erreur serveur');
+    if (!r.ok || data.error) throw new Error(data.error || 'Erreur serveur');
+
+    data._meta = data._meta || {};
+    data._meta.demande_full = demande;
 
     currentResult = data;
     renderResult(data);
-    resultBadge.textContent = 'COMPLÉTÉ — ÉDITABLE';
-    exportBar.style.display = 'flex';
+    saveToHistory(data);
+    resultBadge.textContent   = 'COMPLÉTÉ — ÉDITABLE';
+    exportBar.style.display   = 'grid';
     editModeBar.style.display = 'flex';
-    // toast de fin supprimé
+    statsBar.style.display    = 'flex';
 
-  } catch(err) {
+  } catch (err) {
     resultBody.innerHTML = `
       <div class="error-box">
         <strong>ERREUR D'ANALYSE</strong><br/><br/>
         ${escHtml(err.message)}<br/><br/>
-        <span style="color:var(--text-muted);">
-          Vérifiez qu'Ollama est démarré et que le modèle est téléchargé.<br/>
-          Commandes : <code>ollama serve</code> puis <code>ollama pull llama3</code>
-        </span>
+        <span style="color:var(--text-muted);">Vérifiez qu'Ollama est démarré et que le modèle est téléchargé.<br/>
+        Commandes : <code>ollama serve</code> puis <code>ollama pull llama3</code></span>
       </div>`;
     resultBadge.textContent = 'ERREUR';
     showToast('Erreur : ' + err.message, 'err-toast', 5000);
   } finally {
-    btnAnalyse.disabled = false;
+    btnAnalyse.disabled  = false;
     btnLabel.textContent = '⬡ ANALYSER';
     progressWrap.classList.remove('active');
   }
 });
 
 /* =========================================================================
-   RENDU ÉDITABLE
+   RENDU
 ========================================================================= */
 function renderResult(d) {
   const p   = d.perimetre || {};
-  const ef  = d.exigences_fonctionnelles || [];
-  const ct  = d.contraintes_techniques || {};
-  const kw  = d.mots_cles_domaine || [];
+  const ef  = (d.exigences_fonctionnelles || []).map(e =>
+    typeof e === 'string'
+      ? { id: genId('EF'), text: e, priority: 'Must', verification: 'Test' }
+      : Object.assign({ id: genId('EF'), priority: 'Must', verification: 'Test' }, e)
+  );
+  const nfr = (d.exigences_non_fonctionnelles || []).map(e => {
+    if (typeof e === 'string') return { id: genId('ENF'), text: e, type: 'Performance', priority: 'Must', verification: 'Test' };
+    if (e.texte) return { id: genId('ENF'), text: e.texte, type: e.type || 'Performance', priority: e.priority || 'Must', verification: e.verification || 'Test' };
+    return Object.assign({ id: genId('ENF'), type: 'Performance', priority: 'Must', verification: 'Test' }, e);
+  });
+  const ct   = d.contraintes_techniques || {};
+  const kw   = d.mots_cles_domaine || [];
   const meta = d._meta || {};
 
+  d.exigences_fonctionnelles       = ef;
+  d.exigences_non_fonctionnelles   = nfr;
+
   const CONTRAINTES_DEF = [
-    { label:'Acoustique',       key:'acoustique' },
-    { label:'Fréquences',       key:'frequences' },
-    { label:'Étanchéité / P.',  key:'etancheite_pression' },
-    { label:'Débit / Latence',  key:'debit_latence' },
-    { label:'Env. physique',    key:'environnement_physique' },
+    { label:'Acoustique',      key:'acoustique' },
+    { label:'Fréquences',      key:'frequences' },
+    { label:'Étanchéité / P.', key:'etancheite_pression' },
+    { label:'Débit / Latence', key:'debit_latence' },
+    { label:'Env. physique',   key:'environnement_physique' },
   ];
 
-  /* ---- Helper : tag éditable ---- */
-  function makeTag(text, cssClass='', onDelete, onEdit) {
-    const tag = document.createElement('span');
-    tag.className = 'tag' + (cssClass ? ' '+cssClass : '');
-
+  function makeTag(text, cssClass, onDelete, onEdit) {
+    const tag  = document.createElement('span');
+    tag.className = 'tag' + (cssClass ? ' ' + cssClass : '');
     const span = document.createElement('span');
     span.contentEditable = 'true';
     span.textContent = text;
-    span.addEventListener('blur', () => { if(onEdit) onEdit(span.textContent.trim()); });
-    span.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); span.blur(); } });
-
+    span.addEventListener('blur', () => { if (onEdit) onEdit(); });
+    span.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); span.blur(); } });
     const del = document.createElement('span');
-    del.className = 'del-tag';
-    del.textContent = '×';
-    del.title = 'Supprimer';
-    del.addEventListener('click', () => { tag.remove(); if(onDelete) onDelete(); syncResult(); });
-
-    tag.appendChild(span);
-    tag.appendChild(del);
+    del.className = 'del-tag'; del.textContent = '×'; del.title = 'Supprimer';
+    del.addEventListener('click', () => { tag.remove(); if (onDelete) onDelete(); syncResult(); });
+    tag.appendChild(span); tag.appendChild(del);
     return tag;
   }
 
-  /* ---- Helper : bouton + ajouter tag ---- */
   function makeAddTagBtn(container, cssClass, defaultText) {
     const btn = document.createElement('button');
-    btn.className = 'btn-add-tag';
-    btn.textContent = '+ Ajouter';
+    btn.className = 'btn-add-tag'; btn.textContent = '+ Ajouter';
     btn.addEventListener('click', () => {
-      const tag = makeTag(defaultText, cssClass, null, null);
+      const tag = makeTag(defaultText, cssClass, syncResult, syncResult);
       container.insertBefore(tag, btn);
-      // Focus sur le nouveau tag
       tag.querySelector('span[contenteditable]').focus();
       syncResult();
     });
     return btn;
   }
 
-  /* ---- Conteneur principal ---- */
   resultBody.innerHTML = '';
 
-  /* ===== PÉRIMÈTRE ===== */
-  const secPerimetre = document.createElement('div');
-  secPerimetre.className = 'result-section';
-  secPerimetre.innerHTML = '<div class="section-title">Périmètre</div>';
+  /* ----- SOURCE PANEL ----- */
+  const srcText = (meta.demande_full || meta.demande_source || '').trim();
+  if (srcText) {
+    const src = document.createElement('div');
+    src.className = 'source-panel';
+    const toggle = document.createElement('div');
+    toggle.className = 'source-toggle';
+    toggle.innerHTML = '<span>⬡ Texte source original</span><em class="source-arrow">▶</em>';
+    const content = document.createElement('div');
+    content.className = 'source-content';
+    content.textContent = srcText;
+    toggle.addEventListener('click', () => {
+      const open = content.style.display === 'block';
+      content.style.display = open ? 'none' : 'block';
+      toggle.querySelector('.source-arrow').textContent = open ? '▶' : '▼';
+    });
+    src.appendChild(toggle); src.appendChild(content);
+    resultBody.appendChild(src);
+  }
 
-  // Système sous analyse
-  const systemeWrap = document.createElement('div');
-  systemeWrap.style.marginBottom = '10px';
-  const systemeLabel = document.createElement('div');
-  systemeLabel.className = 'sub-card-label';
-  systemeLabel.textContent = 'Système sous analyse';
-  const systemeBadge = document.createElement('div');
-  systemeBadge.className = 'systeme-badge';
-  const systemeSpan = document.createElement('span');
-  systemeSpan.contentEditable = 'true';
-  systemeSpan.textContent = p.systeme_sous_analyse || 'Non spécifié';
-  systemeSpan.addEventListener('blur', syncResult);
-  systemeBadge.appendChild(systemeSpan);
-  systemeWrap.appendChild(systemeLabel);
-  systemeWrap.appendChild(systemeBadge);
-  secPerimetre.appendChild(systemeWrap);
+  /* ----- PÉRIMÈTRE ----- */
+  const secP = document.createElement('div');
+  secP.className = 'result-section';
+  secP.innerHTML = '<div class="section-title">Périmètre</div>';
 
-  // Grid acteurs / milieux
-  const grid = document.createElement('div');
-  grid.className = 'perimetre-grid';
+  const sysWrap = document.createElement('div');
+  sysWrap.style.marginBottom = '10px';
+  const sysLbl = document.createElement('div');
+  sysLbl.className = 'sub-card-label'; sysLbl.textContent = 'Système sous analyse';
+  const sysBadge = document.createElement('div');
+  sysBadge.className = 'systeme-badge';
+  const sysSpan = document.createElement('span');
+  sysSpan.contentEditable = 'true';
+  sysSpan.textContent = p.systeme_sous_analyse || 'Non spécifié';
+  sysSpan.addEventListener('blur', syncResult);
+  sysBadge.appendChild(sysSpan);
+  sysWrap.appendChild(sysLbl); sysWrap.appendChild(sysBadge);
+  secP.appendChild(sysWrap);
+
+  const pgrid = document.createElement('div');
+  pgrid.className = 'perimetre-grid';
 
   function makeTagSection(title, items, cssClass, defaultText) {
     const card = document.createElement('div');
@@ -564,95 +695,111 @@ function renderResult(d) {
     card.innerHTML = `<div class="sub-card-label">${title}</div>`;
     const list = document.createElement('div');
     list.className = 'tag-list';
-    (items || []).forEach(item => {
-      list.appendChild(makeTag(item, cssClass, syncResult, syncResult));
-    });
+    (items || []).forEach(item => list.appendChild(makeTag(item, cssClass, syncResult, syncResult)));
     list.appendChild(makeAddTagBtn(list, cssClass, defaultText));
     card.appendChild(list);
     return card;
   }
 
-  grid.appendChild(makeTagSection('Acteurs externes', p.acteurs_externes, '', 'Nouvel acteur'));
-  grid.appendChild(makeTagSection('Milieux externes', p.milieux_externes, 'green', 'Nouveau milieu'));
-  secPerimetre.appendChild(grid);
-  resultBody.appendChild(secPerimetre);
+  pgrid.appendChild(makeTagSection('Acteurs externes', p.acteurs_externes, '', 'Nouvel acteur'));
+  pgrid.appendChild(makeTagSection('Milieux externes', p.milieux_externes, 'green', 'Nouveau milieu'));
+  secP.appendChild(pgrid);
+  resultBody.appendChild(secP);
 
-  /* ===== BESOIN FONDAMENTAL ===== */
-  const secBesoin = document.createElement('div');
-  secBesoin.className = 'result-section';
-  secBesoin.innerHTML = '<div class="section-title">Besoin Fondamental</div>';
+  /* ----- BESOIN FONDAMENTAL ----- */
+  const secB = document.createElement('div');
+  secB.className = 'result-section';
+  secB.innerHTML = '<div class="section-title">Besoin Fondamental</div>';
   const besoinDiv = document.createElement('div');
-  besoinDiv.className = 'besoin-text';
-  besoinDiv.contentEditable = 'true';
+  besoinDiv.className = 'besoin-text'; besoinDiv.contentEditable = 'true';
   besoinDiv.textContent = d.besoin_fondamental || 'Non spécifié';
   besoinDiv.addEventListener('blur', syncResult);
-  secBesoin.appendChild(besoinDiv);
-  resultBody.appendChild(secBesoin);
+  secB.appendChild(besoinDiv);
+  resultBody.appendChild(secB);
 
-  /* ===== EXIGENCES FONCTIONNELLES ===== */
+  /* ----- EXIGENCES FONCTIONNELLES ----- */
   const secEF = document.createElement('div');
   secEF.className = 'result-section';
-  const efTitleDiv = document.createElement('div');
-  efTitleDiv.className = 'section-title';
-  efTitleDiv.id = 'ef-title';
-  efTitleDiv.textContent = `Exigences Fonctionnelles (${ef.length})`;
-  secEF.appendChild(efTitleDiv);
+  const efTitle = document.createElement('div');
+  efTitle.className = 'section-title'; efTitle.id = 'ef-title';
+  secEF.appendChild(efTitle);
 
   const efList = document.createElement('div');
-  efList.className = 'exigences-list';
-  efList.id = 'ef-list';
+  efList.className = 'exigences-list'; efList.id = 'ef-list';
 
-  function makeEFItem(text) {
+  function makeEFItem(efObj) {
     const item = document.createElement('div');
     item.className = 'exigence-item';
     item.draggable = true;
+    item.dataset.efId = efObj.id;
+
+    const rowTop = document.createElement('div');
+    rowTop.className = 'row-top';
 
     const handle = document.createElement('span');
-    handle.className = 'drag-handle';
-    handle.textContent = '⠿';
-    handle.title = 'Glisser pour réordonner';
+    handle.className = 'drag-handle'; handle.textContent = '⠿'; handle.title = 'Glisser pour réordonner';
 
     const num = document.createElement('span');
     num.className = 'exigence-num';
 
     const textSpan = document.createElement('span');
-    textSpan.className = 'exigence-text';
+    textSpan.className = 'exigence-text quality-warn-text';
     textSpan.contentEditable = 'true';
 
-    // Coloration "Le système DOIT"
-    textSpan.innerHTML = escHtml(text).replace(
-      /^(Le syst[eè]me DOIT)/i,
-      '<span class="exigence-must">$1</span>'
-    );
-    textSpan.addEventListener('blur', () => {
-      // Recolorer après édition
-      const t = textSpan.textContent;
-      textSpan.innerHTML = escHtml(t).replace(
-        /^(Le syst[eè]me DOIT)/i,
+    const qualBadge = document.createElement('span');
+    qualBadge.className = 'quality-badge';
+    qualBadge.title = 'Contient des termes ambigus — exigence possiblement non-testable';
+
+    function applyText(t) {
+      textSpan.innerHTML = highlightVague(t).replace(
+        /^(Le syst[eè]me DOIT\s*)/i,
         '<span class="exigence-must">$1</span>'
       );
-      syncResult();
+      qualBadge.textContent = hasVagueWord(t) ? '⚠' : '';
+    }
+    applyText(efObj.text || '');
+
+    textSpan.addEventListener('blur', () => {
+      applyText(textSpan.textContent);
+      syncResult(); updateStats();
     });
     textSpan.addEventListener('keydown', e => {
-      if(e.key === 'Enter'){ e.preventDefault(); textSpan.blur(); }
+      if (e.key === 'Enter') { e.preventDefault(); textSpan.blur(); }
     });
 
-    const del = document.createElement('span');
-    del.className = 'del-row';
-    del.textContent = '×';
-    del.title = 'Supprimer cette exigence';
-    del.addEventListener('click', () => { item.remove(); renumberEF(); syncResult(); });
+    const btnCopy = document.createElement('button');
+    btnCopy.className = 'btn-copy-row'; btnCopy.textContent = '⎘'; btnCopy.title = 'Copier l\'exigence';
+    btnCopy.addEventListener('click', () => {
+      navigator.clipboard.writeText(textSpan.textContent.trim())
+        .then(() => showToast('Exigence copiée.', 'success', 2000))
+        .catch(() => showToast('Impossible de copier.', 'err-toast'));
+    });
 
-    item.appendChild(handle);
-    item.appendChild(num);
-    item.appendChild(textSpan);
-    item.appendChild(del);
+    const del = document.createElement('button');
+    del.className = 'del-row'; del.textContent = '×'; del.title = 'Supprimer';
+    del.addEventListener('click', () => { item.remove(); renumberEF(); syncResult(); updateStats(); });
 
-    // Drag & drop
+    rowTop.appendChild(handle); rowTop.appendChild(num); rowTop.appendChild(textSpan);
+    rowTop.appendChild(qualBadge); rowTop.appendChild(btnCopy); rowTop.appendChild(del);
+
+    const rowBot = document.createElement('div');
+    rowBot.className = 'row-bottom';
+
+    const lblP = document.createElement('span'); lblP.className = 'row-lbl'; lblP.textContent = 'Priorité :';
+    const selP = makeInlineSelect(PRIORITY_OPTIONS, efObj.priority || 'Must', 'priority-select', () => updateStats());
+
+    const lblV = document.createElement('span'); lblV.className = 'row-lbl row-lbl-gap'; lblV.textContent = 'Vérif. :';
+    const selV = makeInlineSelect(VERIF_OPTIONS, efObj.verification || 'Test', 'verif-select', null);
+
+    rowBot.appendChild(lblP); rowBot.appendChild(selP);
+    rowBot.appendChild(lblV); rowBot.appendChild(selV);
+    item.appendChild(rowTop); item.appendChild(rowBot);
+
+    /* drag & drop */
     item.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
       item.classList.add('dragging');
-      e.dataTransfer.setData('text/plain', ''); // Firefox fix
+      e.dataTransfer.setData('text/plain', '');
     });
     item.addEventListener('dragend', () => {
       item.classList.remove('dragging');
@@ -660,62 +807,166 @@ function renderResult(d) {
       renumberEF(); syncResult();
     });
     item.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
       const dragging = efList.querySelector('.dragging');
-      if(dragging && dragging !== item){
+      if (dragging && dragging !== item) {
         document.querySelectorAll('.exigence-item').forEach(i => i.classList.remove('drag-over'));
         item.classList.add('drag-over');
-        const rect = item.getBoundingClientRect();
-        const mid = rect.top + rect.height/2;
-        if(e.clientY < mid) efList.insertBefore(dragging, item);
-        else efList.insertBefore(dragging, item.nextSibling);
+        const mid = item.getBoundingClientRect().top + item.getBoundingClientRect().height / 2;
+        efList.insertBefore(dragging, e.clientY < mid ? item : item.nextSibling);
       }
     });
     item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
-    item.addEventListener('drop', e => { e.preventDefault(); });
+    item.addEventListener('drop', e => e.preventDefault());
 
     return item;
   }
 
-  ef.forEach(text => efList.appendChild(makeEFItem(text)));
+  ef.forEach(e => efList.appendChild(makeEFItem(e)));
 
-  // Bouton ajouter exigence
   const btnAddEF = document.createElement('button');
-  btnAddEF.className = 'btn-add-row';
-  btnAddEF.textContent = '+ Ajouter une exigence';
+  btnAddEF.className = 'btn-add-row'; btnAddEF.textContent = '+ Ajouter une exigence fonctionnelle';
   btnAddEF.addEventListener('click', () => {
-    const item = makeEFItem('Le système DOIT ');
+    const newEf = { id: genId('EF'), text: 'Le système DOIT ', priority: 'Must', verification: 'Test' };
+    const item  = makeEFItem(newEf);
     efList.appendChild(item);
-    // Focus sur le champ texte du nouvel item
     const tf = item.querySelector('.exigence-text');
     tf.focus();
-    // Placer le curseur en fin
     const range = document.createRange();
+    range.selectNodeContents(tf); range.collapse(false);
     const sel = window.getSelection();
-    range.selectNodeContents(tf);
-    range.collapse(false);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    renumberEF(); syncResult();
+    sel.removeAllRanges(); sel.addRange(range);
+    renumberEF(); syncResult(); updateStats();
   });
 
-  secEF.appendChild(efList);
-  secEF.appendChild(btnAddEF);
+  secEF.appendChild(efList); secEF.appendChild(btnAddEF);
   resultBody.appendChild(secEF);
   renumberEF();
 
   function renumberEF() {
     const items = efList.querySelectorAll('.exigence-item');
     items.forEach((item, i) => {
-      const num = item.querySelector('.exigence-num');
-      if(num) num.textContent = `EF-${String(i+1).padStart(2,'0')}`;
+      const n = item.querySelector('.exigence-num');
+      if (n) n.textContent = 'EF-' + String(i + 1).padStart(2, '0');
     });
-    const title = document.getElementById('ef-title');
-    if(title) title.textContent = `Exigences Fonctionnelles (${items.length})`;
+    const t = document.getElementById('ef-title');
+    if (t) t.textContent = 'Exigences Fonctionnelles (' + items.length + ')';
   }
 
-  /* ===== CONTRAINTES TECHNIQUES ===== */
+  /* ----- EXIGENCES NON-FONCTIONNELLES ----- */
+  const secNFR = document.createElement('div');
+  secNFR.className = 'result-section';
+  const nfrTitle = document.createElement('div');
+  nfrTitle.className = 'section-title'; nfrTitle.id = 'nfr-title';
+  secNFR.appendChild(nfrTitle);
+
+  const nfrList = document.createElement('div');
+  nfrList.className = 'exigences-list'; nfrList.id = 'nfr-list';
+
+  function makeNFRItem(nfrObj) {
+    const item = document.createElement('div');
+    item.className = 'nfr-item';
+    item.dataset.nfrId = nfrObj.id;
+
+    const rowTop = document.createElement('div');
+    rowTop.className = 'row-top';
+
+    const typeCss = NFR_CSS[nfrObj.type] || 'nfr-perf';
+    const typeBadge = document.createElement('span');
+    typeBadge.className = 'nfr-type-badge ' + typeCss;
+    typeBadge.textContent = nfrObj.type || 'Performance';
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'exigence-text quality-warn-text';
+    textSpan.contentEditable = 'true';
+
+    const qualBadge = document.createElement('span');
+    qualBadge.className = 'quality-badge';
+    qualBadge.title = 'Contient des termes ambigus';
+
+    function applyNFRText(t) {
+      textSpan.innerHTML = highlightVague(t);
+      qualBadge.textContent = hasVagueWord(t) ? '⚠' : '';
+    }
+    applyNFRText(nfrObj.text || '');
+
+    textSpan.addEventListener('blur', () => {
+      applyNFRText(textSpan.textContent);
+      syncResult(); updateStats();
+    });
+    textSpan.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); textSpan.blur(); }
+    });
+
+    const btnCopy = document.createElement('button');
+    btnCopy.className = 'btn-copy-row'; btnCopy.textContent = '⎘'; btnCopy.title = 'Copier';
+    btnCopy.addEventListener('click', () => {
+      navigator.clipboard.writeText(textSpan.textContent.trim())
+        .then(() => showToast('Exigence copiée.', 'success', 2000))
+        .catch(() => showToast('Impossible de copier.', 'err-toast'));
+    });
+
+    const del = document.createElement('button');
+    del.className = 'del-row'; del.textContent = '×'; del.title = 'Supprimer';
+    del.addEventListener('click', () => { item.remove(); updateNFRTitle(); syncResult(); updateStats(); });
+
+    rowTop.appendChild(typeBadge); rowTop.appendChild(textSpan);
+    rowTop.appendChild(qualBadge); rowTop.appendChild(btnCopy); rowTop.appendChild(del);
+
+    const rowBot = document.createElement('div');
+    rowBot.className = 'row-bottom';
+
+    const lblType = document.createElement('span'); lblType.className = 'row-lbl'; lblType.textContent = 'Type :';
+    const selType = document.createElement('select');
+    selType.className = 'inline-select nfr-type-select';
+    NFR_TYPES.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = t;
+      if (t === nfrObj.type) opt.selected = true;
+      selType.appendChild(opt);
+    });
+    selType.addEventListener('change', () => {
+      typeBadge.className = 'nfr-type-badge ' + (NFR_CSS[selType.value] || 'nfr-perf');
+      typeBadge.textContent = selType.value;
+      syncResult();
+    });
+
+    const lblP = document.createElement('span'); lblP.className = 'row-lbl row-lbl-gap'; lblP.textContent = 'Priorité :';
+    const selP = makeInlineSelect(PRIORITY_OPTIONS, nfrObj.priority || 'Must', 'priority-select', () => updateStats());
+
+    const lblV = document.createElement('span'); lblV.className = 'row-lbl row-lbl-gap'; lblV.textContent = 'Vérif. :';
+    const selV = makeInlineSelect(VERIF_OPTIONS, nfrObj.verification || 'Test', 'verif-select', null);
+
+    rowBot.appendChild(lblType); rowBot.appendChild(selType);
+    rowBot.appendChild(lblP); rowBot.appendChild(selP);
+    rowBot.appendChild(lblV); rowBot.appendChild(selV);
+
+    item.appendChild(rowTop); item.appendChild(rowBot);
+    return item;
+  }
+
+  nfr.forEach(e => nfrList.appendChild(makeNFRItem(e)));
+
+  const btnAddNFR = document.createElement('button');
+  btnAddNFR.className = 'btn-add-row'; btnAddNFR.textContent = '+ Ajouter une exigence non-fonctionnelle';
+  btnAddNFR.addEventListener('click', () => {
+    const newNfr = { id: genId('ENF'), text: 'Le système DOIT ', type: 'Performance', priority: 'Must', verification: 'Test' };
+    const item = makeNFRItem(newNfr);
+    nfrList.appendChild(item);
+    item.querySelector('.exigence-text').focus();
+    updateNFRTitle(); syncResult(); updateStats();
+  });
+
+  function updateNFRTitle() {
+    const t = document.getElementById('nfr-title');
+    if (t) t.textContent = 'Exigences Non-Fonctionnelles (' + nfrList.querySelectorAll('.nfr-item').length + ')';
+  }
+
+  secNFR.appendChild(nfrList); secNFR.appendChild(btnAddNFR);
+  resultBody.appendChild(secNFR);
+  updateNFRTitle();
+
+  /* ----- CONTRAINTES TECHNIQUES ----- */
   const secCT = document.createElement('div');
   secCT.className = 'result-section';
   secCT.innerHTML = '<div class="section-title">Contraintes Techniques</div>';
@@ -723,174 +974,209 @@ function renderResult(d) {
   ctGrid.className = 'contraintes-grid';
 
   CONTRAINTES_DEF.forEach(({ label, key }) => {
-    const val = ct[key] || 'Non spécifié';
+    const val  = ct[key] || 'Non spécifié';
     const isNA = val === 'N/A' || val === 'Non spécifié';
     const card = document.createElement('div');
     card.className = 'contrainte-card';
     card.innerHTML = `<div class="contrainte-label">${label}</div>`;
     const valDiv = document.createElement('div');
     valDiv.className = 'contrainte-val' + (isNA ? ' na' : '');
-    valDiv.contentEditable = 'true';
-    valDiv.textContent = val;
-    valDiv.dataset.ctKey = key;
+    valDiv.contentEditable = 'true'; valDiv.textContent = val; valDiv.dataset.ctKey = key;
     valDiv.addEventListener('focus', () => valDiv.classList.remove('na'));
-    valDiv.addEventListener('blur', () => { syncResult(); });
-    card.appendChild(valDiv);
-    ctGrid.appendChild(card);
+    valDiv.addEventListener('blur', syncResult);
+    card.appendChild(valDiv); ctGrid.appendChild(card);
   });
 
-  // Autres contraintes (tags)
   const autresCard = document.createElement('div');
-  autresCard.className = 'contrainte-card';
-  autresCard.style.gridColumn = '1/-1';
+  autresCard.className = 'contrainte-card'; autresCard.style.gridColumn = '1/-1';
   autresCard.innerHTML = '<div class="contrainte-label">Autres contraintes</div>';
   const autresList = document.createElement('div');
-  autresList.className = 'tag-list';
-  autresList.style.marginTop = '4px';
-  const autresArr = Array.isArray(ct.autres) ? ct.autres : [];
-  autresArr.forEach(a => autresList.appendChild(makeTag(a, 'orange', syncResult, syncResult)));
+  autresList.className = 'tag-list'; autresList.style.marginTop = '4px';
+  (Array.isArray(ct.autres) ? ct.autres : []).forEach(a =>
+    autresList.appendChild(makeTag(a, 'orange', syncResult, syncResult))
+  );
   autresList.appendChild(makeAddTagBtn(autresList, 'orange', 'Nouvelle contrainte'));
-  autresCard.appendChild(autresList);
-  ctGrid.appendChild(autresCard);
+  autresCard.appendChild(autresList); ctGrid.appendChild(autresCard);
+  secCT.appendChild(ctGrid); resultBody.appendChild(secCT);
 
-  secCT.appendChild(ctGrid);
-  resultBody.appendChild(secCT);
-
-  /* ===== MOTS-CLÉS ===== */
-  if(kw.length > 0 || true) {
+  /* ----- MOTS-CLÉS ----- */
+  if (kw.length > 0) {
     const secKW = document.createElement('div');
     secKW.className = 'result-section';
     secKW.innerHTML = '<div class="section-title">Mots-clés Domaine</div>';
     const kwWrap = document.createElement('div');
-    kwWrap.className = 'keywords-wrap';
-    kwWrap.id = 'kw-wrap';
+    kwWrap.className = 'keywords-wrap'; kwWrap.id = 'kw-wrap';
     kw.forEach(k => kwWrap.appendChild(makeTag(k, 'orange', syncResult, syncResult)));
     kwWrap.appendChild(makeAddTagBtn(kwWrap, 'orange', 'Nouveau mot-clé'));
-    secKW.appendChild(kwWrap);
-    resultBody.appendChild(secKW);
+    secKW.appendChild(kwWrap); resultBody.appendChild(secKW);
   }
 
-  /* ===== MÉTADONNÉES ===== */
+  /* ----- MÉTADONNÉES ----- */
   const metaDiv = document.createElement('div');
   metaDiv.style.cssText = 'margin-top:16px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted);letter-spacing:1px;';
-  metaDiv.textContent = `Modèle : ${meta.model || '?'}  |  ${meta.timestamp ? new Date(meta.timestamp).toLocaleString('fr-FR') : ''}`;
+  metaDiv.textContent = 'Modèle : ' + (meta.model || '?') + '  |  ' +
+    (meta.timestamp ? new Date(meta.timestamp).toLocaleString('fr-FR') : '');
   resultBody.appendChild(metaDiv);
+
+  updateStats();
 }
 
 /* =========================================================================
-   SYNC : reconstruit currentResult depuis le DOM
+   STATS BAR
+========================================================================= */
+function updateStats() {
+  if (!currentResult) return;
+  const ef  = currentResult.exigences_fonctionnelles       || [];
+  const nfr = currentResult.exigences_non_fonctionnelles   || [];
+  const all = ef.concat(nfr);
+  const cnt = { 'Must': 0, 'Should': 0, 'Could': 0, "Won't": 0 };
+  all.forEach(e => { const p = e.priority || 'Must'; if (p in cnt) cnt[p]++; });
+  const vague = all.filter(e => hasVagueWord(e.text || '')).length;
+
+  statsBar.innerHTML =
+    '<span class="stat-item">EF : <span class="stat-val">' + ef.length + '</span></span>' +
+    '<span class="stat-item">ENF : <span class="stat-val">' + nfr.length + '</span></span>' +
+    '<span class="stat-item">Must : <span class="stat-val stat-must">' + cnt['Must'] + '</span></span>' +
+    '<span class="stat-item">Should : <span class="stat-val stat-should">' + cnt['Should'] + '</span></span>' +
+    '<span class="stat-item">Could : <span class="stat-val stat-could">' + cnt['Could'] + '</span></span>' +
+    (cnt["Won't"] ? '<span class="stat-item">Won\'t : <span class="stat-val stat-wont">' + cnt["Won't"] + '</span></span>' : '') +
+    (vague ? '<span class="stat-item stat-warn">⚠ ' + vague + ' non-vérifiable' + (vague > 1 ? 's' : '') + '</span>' : '');
+}
+
+/* =========================================================================
+   SYNC
 ========================================================================= */
 function syncResult() {
-  if(!currentResult) return;
+  if (!currentResult) return;
 
-  // Périmètre
-  const systemeEl = resultBody.querySelector('.systeme-badge span[contenteditable]');
-  if(systemeEl) currentResult.perimetre.systeme_sous_analyse = systemeEl.textContent.trim();
+  const sysEl = resultBody.querySelector('.systeme-badge span[contenteditable]');
+  if (sysEl) currentResult.perimetre.systeme_sous_analyse = sysEl.textContent.trim();
 
   const subCards = resultBody.querySelectorAll('.perimetre-grid .sub-card');
-  if(subCards[0]) {
-    currentResult.perimetre.acteurs_externes = [...subCards[0].querySelectorAll('.tag span[contenteditable]')]
-      .map(s => s.textContent.trim()).filter(Boolean);
-  }
-  if(subCards[1]) {
-    currentResult.perimetre.milieux_externes = [...subCards[1].querySelectorAll('.tag span[contenteditable]')]
-      .map(s => s.textContent.trim()).filter(Boolean);
-  }
+  if (subCards[0]) currentResult.perimetre.acteurs_externes =
+    [...subCards[0].querySelectorAll('.tag span[contenteditable]')].map(s => s.textContent.trim()).filter(Boolean);
+  if (subCards[1]) currentResult.perimetre.milieux_externes =
+    [...subCards[1].querySelectorAll('.tag span[contenteditable]')].map(s => s.textContent.trim()).filter(Boolean);
 
-  // Besoin fondamental
   const besoinEl = resultBody.querySelector('.besoin-text');
-  if(besoinEl) currentResult.besoin_fondamental = besoinEl.textContent.trim();
+  if (besoinEl) currentResult.besoin_fondamental = besoinEl.textContent.trim();
 
-  // Exigences fonctionnelles
-  const efItems = resultBody.querySelectorAll('#ef-list .exigence-item .exigence-text');
-  currentResult.exigences_fonctionnelles = [...efItems].map(el => el.textContent.trim()).filter(Boolean);
+  currentResult.exigences_fonctionnelles = [...resultBody.querySelectorAll('#ef-list .exigence-item')].map(item => ({
+    id:           item.dataset.efId,
+    text:         (item.querySelector('.exigence-text') ? item.querySelector('.exigence-text').textContent : '').trim(),
+    priority:     item.querySelector('.priority-select') ? item.querySelector('.priority-select').value : 'Must',
+    verification: item.querySelector('.verif-select') ? item.querySelector('.verif-select').value : 'Test',
+  })).filter(e => e.text);
 
-  // Contraintes techniques
+  currentResult.exigences_non_fonctionnelles = [...resultBody.querySelectorAll('#nfr-list .nfr-item')].map(item => ({
+    id:           item.dataset.nfrId,
+    text:         (item.querySelector('.exigence-text') ? item.querySelector('.exigence-text').textContent : '').trim(),
+    type:         item.querySelector('.nfr-type-select') ? item.querySelector('.nfr-type-select').value : 'Performance',
+    priority:     item.querySelector('.priority-select') ? item.querySelector('.priority-select').value : 'Must',
+    verification: item.querySelector('.verif-select') ? item.querySelector('.verif-select').value : 'Test',
+  })).filter(e => e.text);
+
   resultBody.querySelectorAll('.contrainte-val[data-ct-key]').forEach(el => {
     currentResult.contraintes_techniques[el.dataset.ctKey] = el.textContent.trim();
   });
-
-  // Autres contraintes
   const autresWrap = resultBody.querySelector('.contraintes-grid .tag-list');
-  if(autresWrap) {
-    currentResult.contraintes_techniques.autres = [...autresWrap.querySelectorAll('.tag span[contenteditable]')]
-      .map(s => s.textContent.trim()).filter(Boolean);
-  }
+  if (autresWrap) currentResult.contraintes_techniques.autres =
+    [...autresWrap.querySelectorAll('.tag span[contenteditable]')].map(s => s.textContent.trim()).filter(Boolean);
 
-  // Mots-clés
   const kwWrap = document.getElementById('kw-wrap');
-  if(kwWrap) {
-    currentResult.mots_cles_domaine = [...kwWrap.querySelectorAll('.tag span[contenteditable]')]
-      .map(s => s.textContent.trim()).filter(Boolean);
-  }
+  if (kwWrap) currentResult.mots_cles_domaine =
+    [...kwWrap.querySelectorAll('.tag span[contenteditable]')].map(s => s.textContent.trim()).filter(Boolean);
 }
 
 /* =========================================================================
    EXPORT
 ========================================================================= */
-/* ---- Export helpers ---- */
-async function exportViaPost(url, filename, mimeType) {
-  if(!currentResult) return;
+async function exportViaPost(url, filename) {
+  if (!currentResult) return;
   syncResult();
   try {
     const r = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ result: currentResult })
     });
-    if(!r.ok) {
-      const err = await r.json();
-      throw new Error(err.error || 'Erreur serveur');
-    }
-    // Déclenche le téléchargement depuis le blob reçu
+    if (!r.ok) { const err = await r.json(); throw new Error(err.error || 'Erreur serveur'); }
     const blob = await r.blob();
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
+    a.href = URL.createObjectURL(blob); a.download = filename; a.click();
     URL.revokeObjectURL(a.href);
     showToast('✓ Téléchargement démarré : ' + filename, 'success', 4000);
-  } catch(e) {
+  } catch (e) {
     showToast('Erreur export : ' + e.message, 'err-toast', 4000);
   }
 }
 
-document.getElementById('btn-export-json').addEventListener('click', async () => {
-  if(!currentResult) return;
+function makeTimestamp() {
+  return new Date().toISOString().slice(0, 19).replace(/[-:T]/g, m => m === 'T' ? '_' : '');
+}
+
+document.getElementById('btn-export-json').addEventListener('click', () => {
+  if (!currentResult) return;
   syncResult();
-  try {
-    const r = await fetch('/export', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ result: currentResult })
-    });
-    const d = await r.json();
-    if(d.filename) showToast('✓ Exporté : exports/' + d.filename, 'success', 4000);
-    else throw new Error(d.error || 'Erreur export');
-  } catch(e) {
-    showToast('Erreur export : ' + e.message, 'err-toast', 4000);
-  }
+  const filename = 'exigences_' + makeTimestamp() + '.json';
+  const blob = new Blob([JSON.stringify(currentResult, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✓ Téléchargement démarré : ' + filename, 'success', 4000);
 });
 
 document.getElementById('btn-export-word').addEventListener('click', () => {
-  const ts = new Date().toISOString().slice(0,19).replace(/[-:T]/g, (m) => m === 'T' ? '_' : m);
-  exportViaPost('/export/word', `exigences_${ts}.docx`,
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  exportViaPost('/export/word', 'exigences_' + makeTimestamp() + '.docx');
 });
 
 document.getElementById('btn-export-excel').addEventListener('click', () => {
-  const ts = new Date().toISOString().slice(0,19).replace(/[-:T]/g, (m) => m === 'T' ? '_' : m);
-  exportViaPost('/export/excel', `exigences_${ts}.xlsx`,
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  exportViaPost('/export/excel', 'exigences_' + makeTimestamp() + '.xlsx');
 });
 
 document.getElementById('btn-copy-json').addEventListener('click', () => {
-  if(!currentResult) return;
+  if (!currentResult) return;
   syncResult();
   navigator.clipboard.writeText(JSON.stringify(currentResult, null, 2))
     .then(() => showToast('JSON copié dans le presse-papiers.', 'success'))
     .catch(() => showToast('Impossible de copier.', 'err-toast'));
 });
+
+/* =========================================================================
+   CHARGER JSON
+========================================================================= */
+const fileInput = document.getElementById('file-input');
+document.getElementById('btn-load-json').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      currentResult = data;
+      renderResult(data);
+      saveToHistory(data);
+      resultBadge.textContent   = 'CHARGÉ — ÉDITABLE';
+      exportBar.style.display   = 'grid';
+      editModeBar.style.display = 'flex';
+      statsBar.style.display    = 'flex';
+      showToast('✓ Session chargée : ' + (data.perimetre && data.perimetre.systeme_sous_analyse ? data.perimetre.systeme_sous_analyse : '?'), 'success', 4000);
+    } catch (err) {
+      showToast('Fichier JSON invalide : ' + err.message, 'err-toast', 5000);
+    }
+  };
+  reader.readAsText(file);
+  fileInput.value = '';
+});
+
+/* =========================================================================
+   INIT
+========================================================================= */
+checkStatus();
+renderHistory();
+
+})();
 </script>
 </body>
 </html>

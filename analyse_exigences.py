@@ -3,13 +3,15 @@
 analyse_exigences.py
 --------------------
 Serveur Flask local — analyse de demandes clients en contexte naval/sous-marin.
-Utilise Ollama (llama3 / mistral) pour extraire des exigences structurées.
+Supporte Ollama (llama3 / mistral) et l'API Anthropic Claude (haiku / sonnet).
 Exports : JSON, Word (.docx), Excel (.xlsx)
 
 Usage : python analyse_exigences.py  →  http://localhost:5000
+Clé API Claude : définir ANTHROPIC_API_KEY dans .env ou variable d'environnement.
 """
 
 import io
+import os
 import json
 import re
 import datetime
@@ -17,18 +19,38 @@ import ollama
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from pathlib import Path
 
+# Charger .env si présent
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Anthropic Claude API (optionnel)
+try:
+    import anthropic as anthropic_sdk
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+
+# pypdf pour extraction PDF (optionnel)
+try:
+    import pypdf
+    PYPDF_AVAILABLE = True
+except ImportError:
+    PYPDF_AVAILABLE = False
+
 # python-docx
 from docx import Document as DocxDocument
-from docx.shared import Pt, RGBColor, Cm, Inches
+from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
 # openpyxl
 from openpyxl import Workbook
-from openpyxl.styles import (Font, PatternFill, Alignment, Border, Side,
-                              GradientFill)
+from openpyxl.styles import (Font, PatternFill, Alignment, Border, Side)
 from openpyxl.utils import get_column_letter
 
 # json-repair (optionnel)
@@ -70,6 +92,12 @@ OUTPUT ONLY THIS JSON OBJECT:
     "Le systeme DOIT perform third action.",
     "Le systeme DOIT perform fourth action."
   ],
+  "exigences_non_fonctionnelles": [
+    {"type": "Performance", "texte": "Le systeme DOIT atteindre une performance measurable."},
+    {"type": "Fiabilite", "texte": "Le systeme DOIT maintenir une disponibilite measurable."},
+    {"type": "Interface", "texte": "Le systeme DOIT etre compatible avec interface standard."},
+    {"type": "Physique", "texte": "Le systeme DOIT respecter une contrainte physique measurable."}
+  ],
   "contraintes_techniques": {
     "acoustique": "acoustic constraints or Non specifie",
     "frequences": "frequency bands VLF/ELF/etc or Non specifie",
@@ -83,7 +111,9 @@ OUTPUT ONLY THIS JSON OBJECT:
 
 RULES:
 - exigences_fonctionnelles items MUST start with "Le systeme DOIT"
+- exigences_non_fonctionnelles items: texte MUST start with "Le systeme DOIT", type must be one of: Performance, Fiabilite, Interface, Physique, Securite
 - Generate 4 to 8 items in exigences_fonctionnelles
+- Generate 2 to 4 items in exigences_non_fonctionnelles
 - All strings must be in French
 - Output ONLY the JSON object, starting with { and ending with }
 """
@@ -208,12 +238,11 @@ def export_word():
         section.right_margin  = Cm(2.5)
 
     # ---- Couleurs thème ----
-    NAVY    = RGBColor(0x05, 0x37, 0x61)   # bleu marine foncé
-    CYAN    = RGBColor(0x00, 0x9B, 0xC8)   # bleu cyan accent
-    GREEN   = RGBColor(0x00, 0x7A, 0x4B)   # vert
-    ORANGE  = RGBColor(0xC0, 0x50, 0x10)   # orange
-    GRAY_BG = "D9E8F3"                     # fond bleu clair (hex sans #)
-    GRAY_HD = "053761"                     # fond header sombre
+    NAVY    = RGBColor(0x05, 0x37, 0x61)
+    CYAN    = RGBColor(0x00, 0x9B, 0xC8)
+    ORANGE  = RGBColor(0xC0, 0x50, 0x10)
+    GRAY_BG = "D9E8F3"
+    GRAY_HD = "053761"
     WHITE   = "FFFFFF"
 
     def set_cell_bg(cell, hex_color):
@@ -259,18 +288,6 @@ def export_word():
             bottom.set(qn('w:color'), '009BC8')
             pBdr.append(bottom)
             pPr.append(pBdr)
-        return p_obj
-
-    def add_label_value(label, value, label_color=CYAN):
-        p_obj = doc.add_paragraph()
-        p_obj.paragraph_format.space_before = Pt(2)
-        p_obj.paragraph_format.space_after  = Pt(2)
-        r_label = p_obj.add_run(f"{label} : ")
-        r_label.bold = True
-        r_label.font.color.rgb = label_color
-        r_label.font.size = Pt(10)
-        r_value = p_obj.add_run(str(value))
-        r_value.font.size = Pt(10)
         return p_obj
 
     # ===== TITRE PRINCIPAL =====
@@ -374,77 +391,158 @@ def export_word():
     r_b.font.size = Pt(11)
     r_b.italic = True
 
-    # ===== 3. EXIGENCES FONCTIONNELLES =====
-    add_heading(f"3. EXIGENCES FONCTIONNELLES  ({len(ef)})")
+    # helpers pour lire EF/NFR (objets ou chaînes)
+    def ef_text(e):         return e.get("text", e) if isinstance(e, dict) else e
+    def ef_priority(e):     return e.get("priority", "Must") if isinstance(e, dict) else "Must"
+    def ef_verif(e):        return e.get("verification", "Test") if isinstance(e, dict) else "Test"
 
-    tbl_ef = doc.add_table(rows=1, cols=3)
-    tbl_ef.style = 'Table Grid'
-    tbl_ef.alignment = WD_TABLE_ALIGNMENT.CENTER
+    PRIORITY_COLORS = {
+        "Must":    RGBColor(0xFF, 0x3D, 0x5A),
+        "Should":  RGBColor(0xFF, 0xCC, 0x00),
+        "Could":   RGBColor(0x00, 0x9B, 0xC8),
+        "Won't":   RGBColor(0x66, 0x66, 0x66),
+    }
 
-    # Largeurs colonnes : ID(8%), Exigence(72%), Statut(20%)
-    total_w = 8800  # ~16cm en DXA ≈ largeur utile A4
-    col_ws = [700, 6300, 1800]
-    for i, cell in enumerate(tbl_ef.rows[0].cells):
-        cell.width = col_ws[i]
-
-    # Header EF
-    for i, txt in enumerate(["ID", "EXIGENCE", "STATUT"]):
-        cell = tbl_ef.rows[0].cells[i]
-        cell.text = txt
-        set_cell_bg(cell, GRAY_HD)
-        cell_border(cell)
-        run = cell.paragraphs[0].runs[0]
-        run.bold = True
-        run.font.color.rgb = RGBColor(0xFF,0xFF,0xFF)
-        run.font.size = Pt(9)
-        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    for idx, exig in enumerate(ef):
-        row = tbl_ef.add_row()
+    def add_ef_row(tbl, idx, item_id, text_val, priority, verif):
+        row = tbl.add_row()
         bg  = GRAY_BG if idx % 2 == 0 else WHITE
 
-        # ID
         id_cell = row.cells[0]
-        id_cell.text = f"EF-{str(idx+1).zfill(2)}"
+        id_cell.text = item_id
         id_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
         id_cell.paragraphs[0].runs[0].bold = True
         id_cell.paragraphs[0].runs[0].font.color.rgb = CYAN
         id_cell.paragraphs[0].runs[0].font.size = Pt(9)
-        set_cell_bg(id_cell, bg)
-        cell_border(id_cell, "AACCDD", 4)
+        set_cell_bg(id_cell, bg); cell_border(id_cell, "AACCDD", 4)
 
-        # Texte exigence avec "DOIT" en gras
         exig_cell = row.cells[1]
         exig_para = exig_cell.paragraphs[0]
         exig_para.paragraph_format.space_before = Pt(2)
         exig_para.paragraph_format.space_after  = Pt(2)
-        doit_match = re.match(r"^(Le syst[eè]me DOIT\s*)", exig, re.IGNORECASE)
+        doit_match = re.match(r"^(Le syst[eè]me DOIT\s*)", text_val, re.IGNORECASE)
         if doit_match:
             r_must = exig_para.add_run(doit_match.group(1))
-            r_must.bold = True
-            r_must.font.color.rgb = ORANGE
-            r_must.font.size = Pt(10)
-            r_rest = exig_para.add_run(exig[len(doit_match.group(1)):])
+            r_must.bold = True; r_must.font.color.rgb = ORANGE; r_must.font.size = Pt(10)
+            r_rest = exig_para.add_run(text_val[len(doit_match.group(1)):])
             r_rest.font.size = Pt(10)
         else:
-            r_all = exig_para.add_run(exig)
-            r_all.font.size = Pt(10)
-        set_cell_bg(exig_cell, bg)
-        cell_border(exig_cell, "AACCDD", 4)
+            r_all = exig_para.add_run(text_val); r_all.font.size = Pt(10)
+        set_cell_bg(exig_cell, bg); cell_border(exig_cell, "AACCDD", 4)
 
-        # Statut
-        stat_cell = row.cells[2]
+        prio_cell = row.cells[2]
+        prio_cell.text = priority
+        prio_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        prio_cell.paragraphs[0].runs[0].bold = True
+        prio_cell.paragraphs[0].runs[0].font.size = Pt(9)
+        prio_cell.paragraphs[0].runs[0].font.color.rgb = PRIORITY_COLORS.get(priority, RGBColor(0x66,0x66,0x66))
+        set_cell_bg(prio_cell, bg); cell_border(prio_cell, "AACCDD", 4)
+
+        verif_cell = row.cells[3]
+        verif_cell.text = verif
+        verif_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        verif_cell.paragraphs[0].runs[0].font.size = Pt(9)
+        verif_cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(0x00, 0x9B, 0xC8)
+        set_cell_bg(verif_cell, bg); cell_border(verif_cell, "AACCDD", 4)
+
+        stat_cell = row.cells[4]
         stat_cell.text = "À valider"
         stat_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
         stat_cell.paragraphs[0].runs[0].font.size = Pt(9)
         stat_cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(0x66, 0x66, 0x66)
-        set_cell_bg(stat_cell, bg)
-        cell_border(stat_cell, "AACCDD", 4)
+        set_cell_bg(stat_cell, bg); cell_border(stat_cell, "AACCDD", 4)
+
+    # ===== 3. EXIGENCES FONCTIONNELLES =====
+    add_heading(f"3. EXIGENCES FONCTIONNELLES  ({len(ef)})")
+
+    tbl_ef = doc.add_table(rows=1, cols=5)
+    tbl_ef.style = 'Table Grid'
+    tbl_ef.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+    col_ws_ef = [600, 4800, 1000, 1200, 1000]
+    for i, cell in enumerate(tbl_ef.rows[0].cells):
+        cell.width = col_ws_ef[i]
+
+    for i, txt in enumerate(["ID", "EXIGENCE", "PRIORITÉ", "VÉRIF.", "STATUT"]):
+        cell = tbl_ef.rows[0].cells[i]
+        cell.text = txt
+        set_cell_bg(cell, GRAY_HD); cell_border(cell)
+        run = cell.paragraphs[0].runs[0]
+        run.bold = True; run.font.color.rgb = RGBColor(0xFF,0xFF,0xFF); run.font.size = Pt(9)
+        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    for idx, exig in enumerate(ef):
+        add_ef_row(tbl_ef, idx,
+                   f"EF-{str(idx+1).zfill(2)}",
+                   ef_text(exig), ef_priority(exig), ef_verif(exig))
 
     doc.add_paragraph()
 
-    # ===== 4. CONTRAINTES TECHNIQUES =====
-    add_heading("4. CONTRAINTES TECHNIQUES")
+    # ===== 4. EXIGENCES NON-FONCTIONNELLES =====
+    nfr = result.get("exigences_non_fonctionnelles", [])
+    if nfr:
+        add_heading(f"4. EXIGENCES NON-FONCTIONNELLES  ({len(nfr)})")
+
+        tbl_nfr = doc.add_table(rows=1, cols=5)
+        tbl_nfr.style = 'Table Grid'
+        tbl_nfr.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        for i, cell in enumerate(tbl_nfr.rows[0].cells):
+            cell.width = col_ws_ef[i]
+
+        for i, txt in enumerate(["ID", "EXIGENCE", "TYPE", "PRIORITÉ", "VÉRIF."]):
+            cell = tbl_nfr.rows[0].cells[i]
+            cell.text = txt
+            set_cell_bg(cell, GRAY_HD); cell_border(cell)
+            run = cell.paragraphs[0].runs[0]
+            run.bold = True; run.font.color.rgb = RGBColor(0xFF,0xFF,0xFF); run.font.size = Pt(9)
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        for idx, item in enumerate(nfr):
+            nfr_text = item.get("text", item.get("texte", "")) if isinstance(item, dict) else str(item)
+            nfr_type = item.get("type", "Performance") if isinstance(item, dict) else "Performance"
+            nfr_prio = item.get("priority", "Must") if isinstance(item, dict) else "Must"
+            nfr_verif = item.get("verification", "Test") if isinstance(item, dict) else "Test"
+            row = tbl_nfr.add_row()
+            bg  = GRAY_BG if idx % 2 == 0 else WHITE
+
+            r0 = row.cells[0]
+            r0.text = f"ENF-{str(idx+1).zfill(2)}"
+            r0.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            r0.paragraphs[0].runs[0].bold = True
+            r0.paragraphs[0].runs[0].font.color.rgb = CYAN
+            r0.paragraphs[0].runs[0].font.size = Pt(9)
+            set_cell_bg(r0, bg); cell_border(r0, "AACCDD", 4)
+
+            r1 = row.cells[1]
+            r1.text = nfr_text; r1.paragraphs[0].runs[0].font.size = Pt(10)
+            set_cell_bg(r1, bg); cell_border(r1, "AACCDD", 4)
+
+            r2 = row.cells[2]
+            r2.text = nfr_type
+            r2.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            r2.paragraphs[0].runs[0].font.size = Pt(9)
+            r2.paragraphs[0].runs[0].font.color.rgb = ORANGE
+            set_cell_bg(r2, bg); cell_border(r2, "AACCDD", 4)
+
+            r3 = row.cells[3]
+            r3.text = nfr_prio
+            r3.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            r3.paragraphs[0].runs[0].bold = True
+            r3.paragraphs[0].runs[0].font.size = Pt(9)
+            r3.paragraphs[0].runs[0].font.color.rgb = PRIORITY_COLORS.get(nfr_prio, RGBColor(0x66,0x66,0x66))
+            set_cell_bg(r3, bg); cell_border(r3, "AACCDD", 4)
+
+            r4 = row.cells[4]
+            r4.text = nfr_verif
+            r4.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            r4.paragraphs[0].runs[0].font.size = Pt(9)
+            r4.paragraphs[0].runs[0].font.color.rgb = RGBColor(0x00, 0x9B, 0xC8)
+            set_cell_bg(r4, bg); cell_border(r4, "AACCDD", 4)
+
+        doc.add_paragraph()
+
+    # ===== 5. CONTRAINTES TECHNIQUES =====
+    add_heading("5. CONTRAINTES TECHNIQUES")
 
     CT_LABELS = [
         ("acoustique",         "Acoustique"),
@@ -513,9 +611,9 @@ def export_word():
 
     doc.add_paragraph()
 
-    # ===== 5. MOTS-CLÉS =====
+    # ===== 6. MOTS-CLÉS =====
     if kw:
-        add_heading("5. MOTS-CLÉS DOMAINE")
+        add_heading("6. MOTS-CLÉS DOMAINE")
         kw_para = doc.add_paragraph()
         kw_para.paragraph_format.space_after = Pt(8)
         for i, k in enumerate(kw):
@@ -673,7 +771,7 @@ def export_excel():
         ws1.cell(row=i, column=1).fill               = light_fill()
         ws1.cell(row=i, column=1).border             = thin_border()
         ws1.cell(row=i, column=1).alignment          = left_align()
-        merged = ws1.merge_cells(start_row=i, start_column=2, end_row=i, end_column=4)
+        ws1.merge_cells(start_row=i, start_column=2, end_row=i, end_column=4)
         val_cell = ws1.cell(row=i, column=2, value=val)
         val_cell.font      = body_font(size=10)
         val_cell.fill      = alt_fill() if i % 2 == 0 else light_fill(WHITE_HEX)
@@ -686,13 +784,25 @@ def export_excel():
     ws1.column_dimensions["C"].width = 20
     ws1.column_dimensions["D"].width = 20
 
+    # helpers EF (objets ou chaînes)
+    def xl_ef_text(e):  return e.get("text", e) if isinstance(e, dict) else e
+    def xl_ef_prio(e):  return e.get("priority", "Must") if isinstance(e, dict) else "Must"
+    def xl_ef_verif(e): return e.get("verification", "Test") if isinstance(e, dict) else "Test"
+
+    PRIO_COLORS_XL = {
+        "Must":   "FF3D5A",
+        "Should": "FFCC00",
+        "Could":  "009BC8",
+        "Won't":  "888888",
+    }
+
     # =========================================================
     # FEUILLE 2 : EXIGENCES FONCTIONNELLES
     # =========================================================
     ws2 = wb.create_sheet("Exigences Fonctionnelles")
     ws2.sheet_view.showGridLines = False
 
-    ws2.merge_cells("A1:D1")
+    ws2.merge_cells("A1:E1")
     ef_title = ws2["A1"]
     ef_title.value     = f"EXIGENCES FONCTIONNELLES — {p.get('systeme_sous_analyse','')}"
     ef_title.font      = Font(name="Arial", bold=True, size=13, color=NAVY_HEX)
@@ -701,12 +811,13 @@ def export_excel():
     ws2.row_dimensions[1].height = 26
 
     apply_header_row(ws2, 2,
-        ["ID", "EXIGENCE", "PRIORITÉ", "STATUT"],
-        col_widths=[8, 70, 14, 16])
+        ["ID", "EXIGENCE", "PRIORITÉ", "VÉRIF.", "STATUT"],
+        col_widths=[8, 58, 12, 16, 14])
 
     for idx, exig in enumerate(ef):
         row_num = idx + 3
         bg_fill = light_fill(LIGHT_BG) if idx % 2 == 0 else alt_fill()
+        prio    = xl_ef_prio(exig)
 
         id_cell = ws2.cell(row=row_num, column=1, value=f"EF-{str(idx+1).zfill(2)}")
         id_cell.font      = body_font(bold=True, color=CYAN_HEX)
@@ -714,19 +825,25 @@ def export_excel():
         id_cell.border    = thin_border()
         id_cell.alignment = center_align()
 
-        exig_cell = ws2.cell(row=row_num, column=2, value=exig)
+        exig_cell = ws2.cell(row=row_num, column=2, value=xl_ef_text(exig))
         exig_cell.font      = body_font(size=10)
         exig_cell.fill      = bg_fill
         exig_cell.border    = thin_border()
         exig_cell.alignment = left_align(wrap=True)
 
-        prio_cell = ws2.cell(row=row_num, column=3, value="Obligatoire")
-        prio_cell.font      = body_font(size=9, color=ORANGE_HEX, bold=True)
+        prio_cell = ws2.cell(row=row_num, column=3, value=prio)
+        prio_cell.font      = body_font(size=9, color=PRIO_COLORS_XL.get(prio, ORANGE_HEX), bold=True)
         prio_cell.fill      = bg_fill
         prio_cell.border    = thin_border()
         prio_cell.alignment = center_align()
 
-        stat_cell = ws2.cell(row=row_num, column=4, value="À valider")
+        verif_cell = ws2.cell(row=row_num, column=4, value=xl_ef_verif(exig))
+        verif_cell.font      = body_font(size=9, color=CYAN_HEX)
+        verif_cell.fill      = bg_fill
+        verif_cell.border    = thin_border()
+        verif_cell.alignment = center_align()
+
+        stat_cell = ws2.cell(row=row_num, column=5, value="À valider")
         stat_cell.font      = body_font(size=9, color="666666")
         stat_cell.fill      = bg_fill
         stat_cell.border    = thin_border()
@@ -799,6 +916,58 @@ def export_excel():
     ws3.freeze_panes = "A3"
 
     # =========================================================
+    # FEUILLE 4 : EXIGENCES NON-FONCTIONNELLES
+    # =========================================================
+    nfr = result.get("exigences_non_fonctionnelles", [])
+    if nfr:
+        ws4 = wb.create_sheet("Exigences Non-Fonctionnelles")
+        ws4.sheet_view.showGridLines = False
+
+        ws4.merge_cells("A1:E1")
+        nfr_title = ws4["A1"]
+        nfr_title.value     = f"EXIGENCES NON-FONCTIONNELLES — {p.get('systeme_sous_analyse','')}"
+        nfr_title.font      = Font(name="Arial", bold=True, size=13, color=NAVY_HEX)
+        nfr_title.fill      = light_fill(LIGHT_BG)
+        nfr_title.alignment = center_align()
+        ws4.row_dimensions[1].height = 26
+
+        apply_header_row(ws4, 2,
+            ["ID", "EXIGENCE", "TYPE", "PRIORITÉ", "VÉRIF."],
+            col_widths=[8, 52, 14, 12, 16])
+
+        for idx, item in enumerate(nfr):
+            row_num  = idx + 3
+            bg_fill  = light_fill(LIGHT_BG) if idx % 2 == 0 else alt_fill()
+            nfr_text  = item.get("text", item.get("texte", "")) if isinstance(item, dict) else str(item)
+            nfr_type  = item.get("type", "Performance") if isinstance(item, dict) else "Performance"
+            nfr_prio  = item.get("priority", "Must") if isinstance(item, dict) else "Must"
+            nfr_verif = item.get("verification", "Test") if isinstance(item, dict) else "Test"
+
+            c1 = ws4.cell(row=row_num, column=1, value=f"ENF-{str(idx+1).zfill(2)}")
+            c1.font = body_font(bold=True, color=CYAN_HEX); c1.fill = bg_fill
+            c1.border = thin_border(); c1.alignment = center_align()
+
+            c2 = ws4.cell(row=row_num, column=2, value=nfr_text)
+            c2.font = body_font(size=10); c2.fill = bg_fill
+            c2.border = thin_border(); c2.alignment = left_align(wrap=True)
+
+            c3 = ws4.cell(row=row_num, column=3, value=nfr_type)
+            c3.font = body_font(size=9, color=ORANGE_HEX, bold=True); c3.fill = bg_fill
+            c3.border = thin_border(); c3.alignment = center_align()
+
+            c4 = ws4.cell(row=row_num, column=4, value=nfr_prio)
+            c4.font = body_font(size=9, color=PRIO_COLORS_XL.get(nfr_prio, ORANGE_HEX), bold=True)
+            c4.fill = bg_fill; c4.border = thin_border(); c4.alignment = center_align()
+
+            c5 = ws4.cell(row=row_num, column=5, value=nfr_verif)
+            c5.font = body_font(size=9, color=CYAN_HEX); c5.fill = bg_fill
+            c5.border = thin_border(); c5.alignment = center_align()
+
+            ws4.row_dimensions[row_num].height = 32
+
+        ws4.freeze_panes = "A3"
+
+    # =========================================================
     # Sérialisation
     # =========================================================
     buf = io.BytesIO()
@@ -823,9 +992,24 @@ def export_excel():
 def list_models():
     try:
         models_response = ollama.list()
-        models = models_response.get("models", [])
-        names  = [m.get("name", m.get("model","")) for m in models]
-        names  = [n for n in names if n]
+        # ollama-python >= 0.3 retourne un objet avec attribut .models (liste de ModelResponse)
+        # les versions antérieures retournent un dict
+        raw_models = (
+            models_response.models
+            if hasattr(models_response, "models")
+            else models_response.get("models", [])
+        )
+        names = []
+        for m in raw_models:
+            name = (
+                getattr(m, "model", None)
+                or getattr(m, "name", None)
+                or (m.get("name") if isinstance(m, dict) else None)
+                or (m.get("model") if isinstance(m, dict) else None)
+                or ""
+            )
+            if name:
+                names.append(name)
         return jsonify({"models": names if names else ["llama3","mistral"]})
     except Exception as e:
         return jsonify({"models": ["llama3","mistral"], "warning": str(e)})
