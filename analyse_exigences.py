@@ -73,34 +73,46 @@ APPROCHE D'ANALYSE EN 3 NIVEAUX — FONDAMENTALE
 Les demandes client sont souvent incomplètes. Ne te limite jamais à extraire littéralement le texte.
 
 NIVEAU 1 — Explicite (origine: "Explicite")
-  Directement formulé dans le texte client ou le document de contexte.
-  justification = citation exacte entre guillemets «...»
-  Exemple: "débit minimal de 500 bps" → justification: "«débit minimal de 500 bps»"
+  UNIQUEMENT si le texte source contient MOT POUR MOT l'information (valeur, standard, action précise).
+  Tu DOIS pouvoir copier une phrase réelle du texte en justification.
+  justification = extrait textuel réel entre guillemets «...»
+
+  EXEMPLES CORRECTS :
+    Texte: "débit minimal de 500 bps sur 5 km"
+    → texte EF: "Le système DOIT assurer un débit minimal de 500 bps sur une portée de 5 km."
+    → origine: "Explicite", justification: "«débit minimal de 500 bps sur 5 km»"
+
+  RÈGLE CRITIQUE : Si le texte est vague ("définir la communication interne", "besoin d'un système..."),
+  il N'Y A PAS d'Explicite possible pour des valeurs numériques. Ne force pas un "Explicite" sur un texte vague.
 
 NIVEAU 2 — Déduite (origine: "Déduite")
-  Logiquement nécessaire compte tenu des contraintes explicites. Raisonnement d'ingénieur rigoureux.
-  N'invente PAS de valeur — déduis-la depuis une loi physique ou règle technique connue.
-  justification = raisonnement court (ex: "400 m de profondeur → 40 bar (1 bar ≈ 10 m eau)")
-  Exemples de déductions valides:
-    "profondeur 400 m" → "résistance à 40 bar minimum"
-    "système sous-marin" → "étanchéité IP68 minimale"
-    "eau de mer" → "résistance à la corrosion marine NaCl 3,5%"
-    "liaison bidirectionnelle temps réel" → "latence maximale à définir lors de la revue"
+  Logiquement nécessaire à partir d'une contrainte explicite. Raisonnement technique rigoureux.
+  N'invente AUCUNE valeur — déduis depuis une loi physique ou règle technique connue.
+  justification = raisonnement (ex: "Profondeur 400 m mentionnée → 1 bar ≈ 10 m → 40 bar minimum")
+
+  EXEMPLES CORRECTS :
+    Texte "profondeur 400 m" → Déduite: "résistance à 40 bar" / justification: "400 m → 40 bar (loi de Pascal)"
+    Texte "sous-marin" seul → Déduite: "étanchéité IP68" / justification: "Environnement immergé → étanchéité IP68 minimale"
+    Texte "eau de mer" → Déduite: "résistance corrosion NaCl 3,5%" / justification: "Milieu marin → corrosion saline"
+    Texte vague "communication interne" → Déduite: "redondance réseau" / justification: "Système critique embarqué → redondance standard"
 
 NIVEAU 3 — Hypothèse (origine: "Hypothèse")
-  Raisonnable pour ce type de système naval/militaire, non mentionnée dans le texte.
-  Basée sur les standards et pratiques reconnus du domaine.
+  Standard du domaine naval/militaire, non mentionné dans le texte mais attendu.
   justification = "Hypothèse domaine : [raison]. A valider avec le client."
-  Exemples:
-    Système militaire → "Conformité CEM MIL-STD-461G probable"
-    Sous-marin OTAN → "Interface MIL-STD-1553B vers système de combat probable"
-    Communication chiffrée → "Conformité SDIP-27 niveau B probable"
-    Système naval → "Qualification vibration MIL-STD-810H probable"
 
-RÈGLE DE MIX : Génère minimum 2 Explicites + 2 Déduites + 2 Hypothèses.
-La valeur pour l'ingénieur est dans les niveaux 2 et 3 — ce que le client n'a pas pensé à écrire.
+  EXEMPLES CORRECTS :
+    Texte vague → Hypothèse: "Conformité MIL-STD-461G" / justification: "Hypothèse domaine : système militaire embarqué → CEM militaire. A valider."
+    Texte vague → Hypothèse: "Interface MIL-STD-1553B" / justification: "Hypothèse domaine : sous-marin OTAN → bus militaire standard. A valider."
 
-RÈGLE ANTI-INVENTION : Pour les niveaux 2 et 3, n'invente jamais de valeur numérique non déductible. Utilise "à définir lors de la revue des exigences" si la valeur exacte est inconnue.
+RÈGLE DE MIX pour texte VAGUE (peu de détails) :
+  → 0 ou 1 Explicite MAX, majorité Déduites + Hypothèses
+  → Ne génère JAMAIS "Explicite" si tu n'as pas de citation réelle à mettre en justification
+
+RÈGLE DE MIX pour texte DÉTAILLÉ (valeurs numériques présentes) :
+  → Génère des Explicites en proportion du détail fourni, complétées par Déduites + Hypothèses
+
+RÈGLE ANTI-INVENTION : Pour Déduite et Hypothèse, si la valeur exacte n'est pas déductible,
+écris "à définir lors de la revue des exigences" — jamais une valeur inventée.
 
 STRUCTURE JSON EXACTE :
 {

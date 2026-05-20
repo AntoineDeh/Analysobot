@@ -471,6 +471,23 @@ function hasVagueWord(text) {
   return VAGUE_WORDS.some(w => lower.includes(w));
 }
 
+const PLACEHOLDER_PATTERNS = [
+  'citation exacte du texte source',
+  'citation exacte',
+  'extrait du texte',
+  'justification',
+  '«»', '« »',
+];
+
+function isPlaceholderJustif(text, origine) {
+  if (!text || text.trim().length < 5) return true;
+  const lower = text.toLowerCase();
+  if (PLACEHOLDER_PATTERNS.some(p => lower.includes(p))) return true;
+  // "Explicite" sans guillemets «» dans la justification = suspect
+  if (origine === 'Explicite' && !text.includes('«') && !text.includes('"')) return true;
+  return false;
+}
+
 function highlightVague(rawText) {
   let html = escHtml(rawText);
   VAGUE_WORDS.forEach(w => {
@@ -886,11 +903,20 @@ function renderResult(d) {
     rowBot.appendChild(lblV); rowBot.appendChild(selV);
     /* Badge origine */
     const orig = efObj.origine || 'Explicite';
+    const justif = efObj.justification || efObj.extrait_source || '';
+    const suspect = isPlaceholderJustif(justif, orig);
     num.title = orig;
     const origBadge = document.createElement('span');
-    origBadge.className = 'badge-origine ' + (ORIGINE_CSS[orig] || 'badge-E');
-    origBadge.textContent = ORIGINE_BADGE[orig] || 'E';
-    origBadge.title = orig;
+    if (suspect && orig === 'Explicite') {
+      origBadge.className = 'badge-origine badge-H';
+      origBadge.textContent = '?';
+      origBadge.title = 'Classé Explicite mais aucune citation trouvée — vérifier l\'origine';
+      origBadge.style.cursor = 'help';
+    } else {
+      origBadge.className = 'badge-origine ' + (ORIGINE_CSS[orig] || 'badge-E');
+      origBadge.textContent = ORIGINE_BADGE[orig] || 'E';
+      origBadge.title = orig;
+    }
 
     /* Statut select */
     const lblStat = document.createElement('span'); lblStat.className = 'row-lbl row-lbl-gap'; lblStat.textContent = 'Statut :';
@@ -913,9 +939,10 @@ function renderResult(d) {
 
     /* Justification */
     const justifDiv = document.createElement('div');
-    const justif = efObj.justification || efObj.extrait_source || '';
-    justifDiv.className = 'req-justif ' + (JUSTIF_CSS[orig] || 'justif-E');
-    justifDiv.textContent = justif || '— Aucune justification fournie';
+    justifDiv.className = 'req-justif ' + (suspect && orig === 'Explicite' ? 'justif-H' : (JUSTIF_CSS[orig] || 'justif-E'));
+    justifDiv.textContent = suspect && orig === 'Explicite'
+      ? '⚠ Origine à vérifier — le modèle n\'a pas fourni de citation réelle. Reclasser en Déduite ou Hypothèse.'
+      : (justif || '— Aucune justification fournie');
     justifDiv.dataset.raw = justif;
 
     rowTop.insertBefore(origBadge, num);
@@ -1069,11 +1096,20 @@ function renderResult(d) {
 
     /* Badge origine NFR */
     const origNFR = nfrObj.origine || 'Explicite';
+    const justifNFRtxt = nfrObj.justification || nfrObj.extrait_source || '';
+    const suspectNFR = isPlaceholderJustif(justifNFRtxt, origNFR);
     typeBadge.title = origNFR;
     const origBadgeNFR = document.createElement('span');
-    origBadgeNFR.className = 'badge-origine ' + (ORIGINE_CSS[origNFR] || 'badge-E');
-    origBadgeNFR.textContent = ORIGINE_BADGE[origNFR] || 'E';
-    origBadgeNFR.title = origNFR;
+    if (suspectNFR && origNFR === 'Explicite') {
+      origBadgeNFR.className = 'badge-origine badge-H';
+      origBadgeNFR.textContent = '?';
+      origBadgeNFR.title = 'Classé Explicite mais aucune citation trouvée — vérifier l\'origine';
+      origBadgeNFR.style.cursor = 'help';
+    } else {
+      origBadgeNFR.className = 'badge-origine ' + (ORIGINE_CSS[origNFR] || 'badge-E');
+      origBadgeNFR.textContent = ORIGINE_BADGE[origNFR] || 'E';
+      origBadgeNFR.title = origNFR;
+    }
     rowTop.insertBefore(origBadgeNFR, typeBadge);
 
     /* Statut NFR */
@@ -1097,10 +1133,11 @@ function renderResult(d) {
 
     /* Justification NFR */
     const justifNFR = document.createElement('div');
-    const justifTxtNFR = nfrObj.justification || nfrObj.extrait_source || '';
-    justifNFR.className = 'req-justif ' + (JUSTIF_CSS[origNFR] || 'justif-E');
-    justifNFR.textContent = justifTxtNFR || '— Aucune justification fournie';
-    justifNFR.dataset.raw = justifTxtNFR;
+    justifNFR.className = 'req-justif ' + (suspectNFR && origNFR === 'Explicite' ? 'justif-H' : (JUSTIF_CSS[origNFR] || 'justif-E'));
+    justifNFR.textContent = suspectNFR && origNFR === 'Explicite'
+      ? '⚠ Origine à vérifier — le modèle n\'a pas fourni de citation réelle. Reclasser en Déduite ou Hypothèse.'
+      : (justifNFRtxt || '— Aucune justification fournie');
+    justifNFR.dataset.raw = justifNFRtxt;
 
     item.appendChild(rowTop); item.appendChild(rowBot); item.appendChild(justifNFR);
     return item;
