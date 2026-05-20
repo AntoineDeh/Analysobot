@@ -1,8 +1,26 @@
-*.exe
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Exports générés
+exports/
+
+# Composants portables — installation/python/
+installation/python/*.exe
+installation/python/*.dll
+installation/python/*.zip
+installation/python/*.pyd
+installation/python/Lib/
+installation/python/Scripts/
+installation/python/DLLs/
+
+# Composants portables — installation/ollama/
+installation/ollama/
+installation/ollama_models/
+
+# Fichiers système
 *.msi
 *.dmg
-exports/
-__pycache__/
-.venv/
-*.pyc"OllamaSetup.exe" 
-"*.exe" 
+Thumbs.db
+.DS_Store

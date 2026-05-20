@@ -53,7 +53,11 @@ except ImportError:
 DEFAULT_MODEL = "mistral"
 HOST = "127.0.0.1"
 PORT = 5000
-OUTPUT_DIR = Path("exports")
+
+# Chemins absolus relatifs à ce fichier (fonctionne quel que soit le répertoire de lancement)
+DEV_DIR    = Path(__file__).parent
+ROOT_DIR   = DEV_DIR.parent
+OUTPUT_DIR = ROOT_DIR / "exports"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 # ---------------------------------------------------------------------------
@@ -213,12 +217,12 @@ def parse_json_robust(raw_text: str) -> dict:
 # ---------------------------------------------------------------------------
 # Flask app
 # ---------------------------------------------------------------------------
-app = Flask(__name__, static_folder=".")
+app = Flask(__name__, static_folder=str(DEV_DIR))
 
 
 @app.route("/")
 def index():
-    return send_from_directory(".", "index.html")
+    return send_from_directory(str(DEV_DIR), "index.html")
 
 
 @app.route("/analyse", methods=["POST"])

@@ -1,0 +1,14 @@
+Extraire ici le contenu de python-3.12.x-embed-amd64.zip
+
+Télécharger depuis :
+  https://www.python.org/downloads/windows/
+  Section : "Windows embeddable package (64-bit)"
+
+Après extraction, ce dossier doit contenir :
+  python.exe
+  python312.dll
+  python312.zip
+  python312._pth
+  ...
+
+Puis exécuter SETUP_USB.bat depuis la racine du projet.
