@@ -15,7 +15,7 @@ import json
 import re
 import datetime
 import ollama
-from flask import Flask, request, jsonify, send_from_directory, send_file, Response, stream_with_context
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from pathlib import Path
 
 
@@ -224,47 +224,32 @@ def analyse():
     parts.append(f"DEMANDE CLIENT À ANALYSER :\n\n{demande}\n\nProduis l'objet JSON maintenant :")
     user_message = "\n\n---\n\n".join(parts)
 
-    def stream_ollama(messages, temperature=0.1):
-        accumulated = ""
-        try:
-            for chunk in ollama.chat(
-                model=model,
-                messages=messages,
-                stream=True,
-                options={"temperature": temperature, "top_p": 0.9,
-                         "num_predict": 4096, "num_ctx": 16384}
-            ):
-                content = (
-                    chunk.message.content if hasattr(chunk, "message")
-                    else chunk.get("message", {}).get("content", "")
-                ) or ""
-                accumulated += content
-                yield f"data: {json.dumps({'type': 'chunk', 'len': len(accumulated)})}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-            return
-        try:
-            result = parse_json_robust(accumulated)
-            result["_meta"] = {
-                "model":          model,
-                "timestamp":      datetime.datetime.now().isoformat(),
-                "demande_source": demande[:200] + ("..." if len(demande) > 200 else ""),
-                "demande_full":   demande,
-                "context_file":   data.get("context_filename", ""),
-            }
-            yield f"data: {json.dumps({'type': 'result', 'data': result})}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': f'JSON invalide : {str(e)}'})}\n\n"
-        yield "data: [DONE]\n\n"
-
-    return Response(
-        stream_with_context(stream_ollama([
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": user_message},
-        ])),
-        mimetype="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
-    )
+    try:
+        response = ollama.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",   "content": user_message},
+            ],
+            options={"temperature": 0.1, "top_p": 0.9,
+                     "num_predict": 4096, "num_ctx": 16384}
+        )
+        raw = (response.message.content
+               if hasattr(response, "message")
+               else response["message"]["content"])
+        result = parse_json_robust(raw)
+        result["_meta"] = {
+            "model":          model,
+            "timestamp":      datetime.datetime.now().isoformat(),
+            "demande_source": demande[:200] + ("..." if len(demande) > 200 else ""),
+            "demande_full":   demande,
+            "context_file":   data.get("context_filename", ""),
+        }
+        return jsonify(result)
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"JSON invalide : {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Erreur inattendue : {str(e)}"}), 500
 
 
 @app.route("/extract-context", methods=["POST"])
@@ -314,42 +299,27 @@ def affiner():
         "Retourne l'objet JSON amélioré :"
     )
 
-    def stream_refine():
-        accumulated = ""
-        try:
-            for chunk in ollama.chat(
-                model=model,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user",   "content": refine_msg},
-                ],
-                stream=True,
-                options={"temperature": 0.2, "top_p": 0.9,
-                         "num_predict": 4096, "num_ctx": 16384}
-            ):
-                content = (
-                    chunk.message.content if hasattr(chunk, "message")
-                    else chunk.get("message", {}).get("content", "")
-                ) or ""
-                accumulated += content
-                yield f"data: {json.dumps({'type': 'chunk', 'len': len(accumulated)})}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-            return
-        try:
-            refined = parse_json_robust(accumulated)
-            refined["_meta"] = result.get("_meta", {})
-            refined["_meta"]["refined_at"] = datetime.datetime.now().isoformat()
-            yield f"data: {json.dumps({'type': 'result', 'data': refined})}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': f'JSON invalide : {str(e)}'})}\n\n"
-        yield "data: [DONE]\n\n"
-
-    return Response(
-        stream_with_context(stream_refine()),
-        mimetype="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
-    )
+    try:
+        response = ollama.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",   "content": refine_msg},
+            ],
+            options={"temperature": 0.2, "top_p": 0.9,
+                     "num_predict": 4096, "num_ctx": 16384}
+        )
+        raw = (response.message.content
+               if hasattr(response, "message")
+               else response["message"]["content"])
+        refined = parse_json_robust(raw)
+        refined["_meta"] = result.get("_meta", {})
+        refined["_meta"]["refined_at"] = datetime.datetime.now().isoformat()
+        return jsonify(refined)
+    except json.JSONDecodeError as e:
+        return jsonify({"error": f"JSON invalide : {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Erreur inattendue : {str(e)}"}), 500
 
 
 @app.route("/export", methods=["POST"])

@@ -646,26 +646,22 @@ btnAnalyse.addEventListener('click', async () => {
     </div>`;
 
   try {
-    await readSSEStream('/analyse', {
+    const data = await postJSON('/analyse', {
       demande,
       model:            modelSelect.value,
       context:          contextText,
       context_filename: contextFileName
-    }, (data) => {
-      data._meta = data._meta || {};
-      data._meta.demande_full = demande;
-      currentResult = data;
-      renderResult(data);
-      saveToHistory(data);
-      resultBadge.textContent   = 'COMPLÉTÉ — ÉDITABLE';
-      exportBar.style.display   = 'grid';
-      editModeBar.style.display = 'flex';
-      statsBar.style.display    = 'flex';
-      document.getElementById('prefix-wrap').style.display = 'flex';
-    }, (tokenCount) => {
-      const el = resultBody.querySelector('.placeholder-text');
-      if (el) el.textContent = `Génération en cours… ${tokenCount} tokens`;
     });
+    data._meta = data._meta || {};
+    data._meta.demande_full = demande;
+    currentResult = data;
+    renderResult(data);
+    saveToHistory(data);
+    resultBadge.textContent   = 'COMPLÉTÉ — ÉDITABLE';
+    exportBar.style.display   = 'grid';
+    editModeBar.style.display = 'flex';
+    statsBar.style.display    = 'flex';
+    document.getElementById('prefix-wrap').style.display = 'flex';
   } catch (err) {
     resultBody.innerHTML = `
       <div class="error-box">
@@ -1269,34 +1265,17 @@ function syncResult() {
 }
 
 /* =========================================================================
-   SSE STREAM HELPER
+   FETCH JSON HELPER
 ========================================================================= */
-async function readSSEStream(url, body, onResult, onChunk) {
+async function postJSON(url, body) {
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Erreur serveur'); }
-  const reader  = r.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    const lines = buf.split('\n');
-    buf = lines.pop() || '';
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const raw = line.slice(6).trim();
-      if (raw === '[DONE]') continue;
-      const msg = JSON.parse(raw);
-      if (msg.type === 'chunk' && onChunk) onChunk(msg.len);
-      else if (msg.type === 'result') onResult(msg.data);
-      else if (msg.type === 'error') throw new Error(msg.message);
-    }
-  }
+  const d = await r.json();
+  if (!r.ok || d.error) throw new Error(d.error || 'Erreur serveur');
+  return d;
 }
 
 /* =========================================================================
@@ -1309,16 +1288,11 @@ document.getElementById('btn-affiner').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '⟳ AFFINEMENT EN COURS…';
   resultBadge.textContent = 'AFFINEMENT…';
   try {
-    await readSSEStream('/affiner',
-      { result: currentResult, model: modelSelect.value },
-      (data) => {
-        currentResult = data;
-        renderResult(data);
-        resultBadge.textContent = 'AFFINÉ — ÉDITABLE';
-        showToast('✓ Exigences affinées (ISO 29148).', 'success', 4000);
-      },
-      (tokenCount) => { btn.textContent = `⟳ AFFINEMENT… ${tokenCount} t`; }
-    );
+    const data = await postJSON('/affiner', { result: currentResult, model: modelSelect.value });
+    currentResult = data;
+    renderResult(data);
+    resultBadge.textContent = 'AFFINÉ — ÉDITABLE';
+    showToast('✓ Exigences affinées (ISO 29148).', 'success', 4000);
   } catch (err) {
     showToast('Erreur affinement : ' + err.message, 'err-toast', 4000);
     resultBadge.textContent = 'ERREUR';
