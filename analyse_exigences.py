@@ -11,7 +11,6 @@ Clé API Claude : définir ANTHROPIC_API_KEY dans .env ou variable d'environneme
 """
 
 import io
-import os
 import json
 import re
 import datetime
@@ -19,19 +18,6 @@ import ollama
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from pathlib import Path
 
-# Charger .env si présent
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
-
-# Anthropic Claude API (optionnel)
-try:
-    import anthropic as anthropic_sdk
-    ANTHROPIC_AVAILABLE = True
-except ImportError:
-    ANTHROPIC_AVAILABLE = False
 
 # pypdf pour extraction PDF (optionnel)
 try:
@@ -63,7 +49,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-DEFAULT_MODEL = "llama3"
+DEFAULT_MODEL = "mistral"
 HOST = "127.0.0.1"
 PORT = 5000
 OUTPUT_DIR = Path("exports")
@@ -160,41 +146,74 @@ def index():
 
 @app.route("/analyse", methods=["POST"])
 def analyse():
-    data = request.get_json(force=True)
+    data    = request.get_json(force=True)
     demande = data.get("demande", "").strip()
     model   = data.get("model", DEFAULT_MODEL).strip()
+    context = data.get("context", "").strip()
     if not demande:
         return jsonify({"error": "Demande vide."}), 400
 
-    user_message = (
-        f"Client request to analyze:\n\n{demande}\n\n"
-        "Output the JSON object now:"
-    )
+    # Construction du message utilisateur
+    parts = []
+    if context:
+        max_ctx = 60000 if model.startswith("claude-") else 6000
+        ctx_trunc = context[:max_ctx]
+        parts.append(f"ADDITIONAL CONTEXT DOCUMENT (use as technical reference):\n{ctx_trunc}")
+    parts.append(f"Client request to analyze:\n\n{demande}\n\nOutput the JSON object now:")
+    user_message = "\n\n".join(parts)
+
     try:
         response = ollama.chat(
             model=model,
             messages=[
-                {"role": "system",    "content": SYSTEM_PROMPT},
-                {"role": "user",      "content": user_message},
-                {"role": "assistant", "content": "{"},
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user",   "content": user_message},
             ],
             options={"temperature": 0.1, "top_p": 0.9,
-                     "num_predict": 4096, "num_ctx": 8192}
+                     "num_predict": 4096, "num_ctx": 16384}
         )
-        raw_text = "{" + response["message"]["content"]
+        raw_text = response["message"]["content"]
+
         result = parse_json_robust(raw_text)
         result["_meta"] = {
-            "model": model,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "demande_source": demande[:200] + ("..." if len(demande) > 200 else "")
+            "model":          model,
+            "timestamp":      datetime.datetime.now().isoformat(),
+            "demande_source": demande[:200] + ("..." if len(demande) > 200 else ""),
+            "context_file":   data.get("context_filename", ""),
         }
         return jsonify(result)
-    except ollama.ResponseError as e:
-        return jsonify({"error": f"Erreur Ollama : {e.error}"}), 500
     except json.JSONDecodeError as e:
         return jsonify({"error": f"JSON invalide : {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": f"Erreur inattendue : {str(e)}"}), 500
+
+
+@app.route("/extract-context", methods=["POST"])
+def extract_context():
+    """Extrait le texte d'un PDF ou fichier texte pour l'utiliser comme contexte."""
+    file = request.files.get("file")
+    if not file:
+        return jsonify({"error": "Aucun fichier reçu."}), 400
+
+    fname = (file.filename or "").lower()
+
+    if fname.endswith(".pdf"):
+        if not PYPDF_AVAILABLE:
+            return jsonify({"error": "Package 'pypdf' non installé. Lancez : pip install pypdf"}), 500
+        try:
+            reader = pypdf.PdfReader(file)
+            text = "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+        except Exception as e:
+            return jsonify({"error": f"Impossible de lire le PDF : {str(e)}"}), 500
+    elif fname.endswith((".txt", ".md")):
+        text = file.read().decode("utf-8", errors="ignore").strip()
+    else:
+        return jsonify({"error": "Format non supporté. Utilisez PDF, TXT ou MD."}), 400
+
+    MAX_CHARS = 80000
+    truncated = len(text) > MAX_CHARS
+    text = text[:MAX_CHARS]
+    return jsonify({"text": text, "chars": len(text), "truncated": truncated})
 
 
 @app.route("/export", methods=["POST"])
@@ -324,6 +343,27 @@ def export_word():
     r3.italic = True
 
     doc.add_paragraph()  # espace
+
+    # ===== 0. DEMANDE CLIENT =====
+    demande_full = meta.get("demande_full") or meta.get("demande_source") or ""
+    context_file = meta.get("context_file", "")
+    if demande_full:
+        add_heading("Demande Client Analysée", level=2, color=CYAN)
+        dem_para = doc.add_paragraph()
+        dem_para.paragraph_format.left_indent  = Cm(0.5)
+        dem_para.paragraph_format.space_after  = Pt(4)
+        dem_para.paragraph_format.space_before = Pt(2)
+        r_dem = dem_para.add_run(demande_full)
+        r_dem.font.size = Pt(10)
+        r_dem.italic = True
+        if context_file:
+            ctx_para = doc.add_paragraph()
+            ctx_para.paragraph_format.space_after = Pt(8)
+            r_ctx = ctx_para.add_run(f"Document de contexte : {context_file}")
+            r_ctx.font.size = Pt(8)
+            r_ctx.font.color.rgb = RGBColor(0x88, 0xAA, 0xBB)
+            r_ctx.italic = True
+        doc.add_paragraph()
 
     # ===== 1. PÉRIMÈTRE =====
     add_heading("1. PÉRIMÈTRE DU SYSTÈME")
@@ -759,13 +799,18 @@ def export_excel():
     ws1.row_dimensions[4].height = 8
 
     # Bloc infos
+    demande_full_xl = meta.get("demande_full") or meta.get("demande_source") or ""
+    context_file_xl = meta.get("context_file", "")
     infos = [
         ("Système sous analyse", p.get("systeme_sous_analyse","Non spécifié")),
         ("Besoin fondamental",   result.get("besoin_fondamental","Non spécifié")),
         ("Acteurs externes",     ", ".join(p.get("acteurs_externes",[]))),
         ("Milieux externes",     ", ".join(p.get("milieux_externes",[]))),
-        ("Mots-clés domaine",   ", ".join(kw)),
+        ("Mots-clés domaine",    ", ".join(kw)),
+        ("Demande client",       demande_full_xl),
     ]
+    if context_file_xl:
+        infos.append(("Document de contexte", context_file_xl))
     for i, (label, val) in enumerate(infos, start=5):
         ws1.cell(row=i, column=1, value=label).font  = body_font(bold=True, color=NAVY_HEX)
         ws1.cell(row=i, column=1).fill               = light_fill()
@@ -777,7 +822,8 @@ def export_excel():
         val_cell.fill      = alt_fill() if i % 2 == 0 else light_fill(WHITE_HEX)
         val_cell.border    = thin_border()
         val_cell.alignment = left_align(wrap=True)
-        ws1.row_dimensions[i].height = 22
+        row_h = 60 if label == "Demande client" and len(val) > 100 else 22
+        ws1.row_dimensions[i].height = row_h
 
     ws1.column_dimensions["A"].width = 28
     ws1.column_dimensions["B"].width = 40
@@ -990,16 +1036,16 @@ def export_excel():
 # ---------------------------------------------------------------------------
 @app.route("/models", methods=["GET"])
 def list_models():
+    names = []
+
+    # Modèles Ollama locaux
     try:
         models_response = ollama.list()
-        # ollama-python >= 0.3 retourne un objet avec attribut .models (liste de ModelResponse)
-        # les versions antérieures retournent un dict
         raw_models = (
             models_response.models
             if hasattr(models_response, "models")
             else models_response.get("models", [])
         )
-        names = []
         for m in raw_models:
             name = (
                 getattr(m, "model", None)
@@ -1010,9 +1056,11 @@ def list_models():
             )
             if name:
                 names.append(name)
-        return jsonify({"models": names if names else ["llama3","mistral"]})
-    except Exception as e:
-        return jsonify({"models": ["llama3","mistral"], "warning": str(e)})
+    except Exception:
+        if not names:
+            names += ["llama3", "mistral"]
+
+    return jsonify({"models": names if names else ["llama3", "mistral"]})
 
 
 # ---------------------------------------------------------------------------

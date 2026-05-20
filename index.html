@@ -4,8 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SYREQ — Analyseur d'Exigences Naval</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#050a0f;--bg-panel:#080f16;--bg-card:#0b1520;
@@ -13,7 +11,7 @@
   --accent:#00d4ff;--accent2:#00ff9d;--accent3:#ff6b35;
   --text:#cde8f8;--text-dim:#5a8aaa;--text-muted:#2a5570;
   --success:#00ff9d;--warning:#ffcc00;--error:#ff3d5a;
-  --font-mono:'Share Tech Mono',monospace;--font-ui:'Rajdhani',sans-serif;
+  --font-mono:'Consolas','Courier New',monospace;--font-ui:'Segoe UI','Arial',sans-serif;
   --radius:3px;
   --glow-sm:0 0 6px rgba(0,212,255,.25);
   --glow-md:0 0 16px rgba(0,212,255,.35);
@@ -83,6 +81,13 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
 /* LOAD + HISTORY */
 .btn-load{width:100%;margin-top:8px;padding:7px;background:transparent;border:1px dashed var(--border);color:var(--text-muted);font-family:var(--font-mono);font-size:10px;letter-spacing:1px;border-radius:var(--radius);cursor:pointer;transition:all .2s}
 .btn-load:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* CONTEXT DOCUMENT */
+.context-section{margin-top:12px}
+.context-indicator{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-radius:var(--radius);margin-bottom:6px}
+.context-name{font-size:10px;color:var(--accent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.5px}
+.context-remove{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;line-height:1;transition:color .15s;padding:0 2px}
+.context-remove:hover{color:var(--error)}
 .history-section{margin-top:14px}
 .history-label{font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
 .history-list{display:flex;flex-direction:column;gap:4px}
@@ -287,6 +292,18 @@ textarea:focus{border-color:var(--accent);box-shadow:var(--glow-sm)}
         <div class="progress-bar"></div>
       </div>
 
+      <!-- Document de contexte -->
+      <div class="context-section">
+        <div class="quick-label">Document de contexte (optionnel) :</div>
+        <div class="context-indicator" id="context-indicator" style="display:none;">
+          <span>📎</span>
+          <span class="context-name" id="context-name"></span>
+          <button class="context-remove" id="btn-remove-context" title="Supprimer le contexte">×</button>
+        </div>
+        <button class="btn-load" id="btn-upload-context">📎 Charger PDF / TXT de contexte</button>
+        <input type="file" id="context-input" accept=".pdf,.txt,.md" style="display:none"/>
+      </div>
+
       <button class="btn-load" id="btn-load-json">⬆ Charger un export JSON</button>
       <input type="file" id="file-input" accept=".json" style="display:none"/>
 
@@ -384,7 +401,9 @@ const statusDot    = document.getElementById('status-dot');
 const statusLabel  = document.getElementById('status-label');
 const toast        = document.getElementById('toast');
 
-let currentResult = null;
+let currentResult   = null;
+let contextText     = '';
+let contextFileName = '';
 
 /* =========================================================================
    UTILITAIRES
@@ -555,7 +574,7 @@ btnAnalyse.addEventListener('click', async () => {
     const r = await fetch('/analyse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ demande, model: modelSelect.value })
+      body: JSON.stringify({ demande, model: modelSelect.value, context: contextText, context_filename: contextFileName })
     });
     const data = await r.json();
     if (!r.ok || data.error) throw new Error(data.error || 'Erreur serveur');
@@ -1140,6 +1159,42 @@ document.getElementById('btn-copy-json').addEventListener('click', () => {
   navigator.clipboard.writeText(JSON.stringify(currentResult, null, 2))
     .then(() => showToast('JSON copié dans le presse-papiers.', 'success'))
     .catch(() => showToast('Impossible de copier.', 'err-toast'));
+});
+
+/* =========================================================================
+   DOCUMENT DE CONTEXTE (PDF / TXT)
+========================================================================= */
+const contextInput     = document.getElementById('context-input');
+const contextIndicator = document.getElementById('context-indicator');
+const contextNameEl    = document.getElementById('context-name');
+
+document.getElementById('btn-upload-context').addEventListener('click', () => contextInput.click());
+
+document.getElementById('btn-remove-context').addEventListener('click', () => {
+  contextText = ''; contextFileName = '';
+  contextIndicator.style.display = 'none';
+  showToast('Contexte supprimé.', '', 2000);
+});
+
+contextInput.addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  showToast('Extraction du document...', '', 99999);
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await fetch('/extract-context', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || 'Erreur extraction');
+    contextText     = d.text;
+    contextFileName = file.name;
+    contextNameEl.textContent      = file.name + ' — ' + d.chars.toLocaleString('fr-FR') + ' car.' + (d.truncated ? ' (tronqué)' : '');
+    contextIndicator.style.display = 'flex';
+    showToast('✓ Contexte chargé : ' + file.name, 'success', 3000);
+  } catch (err) {
+    showToast('Erreur contexte : ' + err.message, 'err-toast', 4000);
+  }
+  contextInput.value = '';
 });
 
 /* =========================================================================
